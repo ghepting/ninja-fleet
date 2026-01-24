@@ -1,0 +1,12 @@
+---
+- name: Homelab
+  ansible.builtin.import_playbook: playbooks/homelab.yml
+
+- name: Workstation
+  ansible.builtin.import_playbook: playbooks/workstation.yml
+
+- name: Mac
+  ansible.builtin.import_playbook: playbooks/mac.yml
+
+- name: Phone
+  ansible.builtin.import_playbook: playbooks/phone.yml

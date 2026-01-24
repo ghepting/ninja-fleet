@@ -1,0 +1,77 @@
+- name: vpn | Install WireGuard tools (macOS)
+  community.general.homebrew:
+    name: wireguard-tools
+    state: present
+  when: ansible_facts['os_family'] == 'Darwin'
+  become: false
+
+- name: vpn | Install WireGuard tools (Debian/Ubuntu)
+  ansible.builtin.apt:
+    name: wireguard-tools
+    state: present
+  when: ansible_facts['pkg_mgr'] == 'apt'
+  become: true
+
+- name: vpn | Install WireGuard tools (Fedora)
+  ansible.builtin.dnf:
+    name: wireguard-tools
+    state: present
+  when: ansible_facts['pkg_mgr'] == 'dnf'
+  become: true
+
+- name: vpn | Install WireGuard tools (Arch)
+  community.general.pacman:
+    name: wireguard-tools
+    state: present
+  when: ansible_facts['pkg_mgr'] == 'pacman'
+  become: true
+
+- name: vpn | Ensure wireguard_peer is defined
+  ansible.builtin.assert:
+    that: wireguard_peer is defined
+    fail_msg: "Please define wireguard_peer in inventory for this host (e.g., garymacbook, ninjavengeance)"
+
+- name: vpn | Find WireGuard peer config directory on server
+  ansible.builtin.find:
+    paths: /opt/homelab/services/wireguard/config
+    file_type: directory
+    patterns: "peer_{{ wireguard_peer }}"
+  delegate_to: ninja-server
+  register: workstation_wg_peer_config_dir
+  become: true
+
+- name: vpn | Find WireGuard config file in peer directory
+  ansible.builtin.find:
+  delegate_to: ninja-server
+  register: workstation_wg_peer_config_exact
+  when: workstation_wg_peer_config_dir.matched > 0
+  become: true
+
+- name: vpn | Read WireGuard config from server
+  ansible.builtin.slurp:
+    src: "{{ workstation_wg_peer_config_exact.files[0].path }}"
+  delegate_to: ninja-server
+  register: workstation_wg_config_content
+  when: workstation_wg_peer_config_dir.matched > 0 and workstation_wg_peer_config_exact.matched > 0
+  become: true
+
+- name: vpn | Ensure WireGuard directory exists
+  ansible.builtin.file:
+    path: /etc/wireguard
+    state: directory
+    mode: "0700"
+    owner: root
+    group: root
+  become: true
+  when: workstation_wg_config_content.content is defined
+
+- name: vpn | Write WireGuard config file
+  ansible.builtin.copy:
+    content: "{{ workstation_wg_config_content['content'] | b64decode }}"
+    dest: /etc/wireguard/wg0.conf
+    mode: "0600"
+    owner: root
+    group: root
+  become: true
+  when: workstation_wg_config_content.content is defined
+  notify: Restart WireGuard

@@ -1,0 +1,63 @@
+{
+	email ghepting@gmail.com
+}
+
+(restricted) {
+	@private_only {
+		remote_ip private_ranges
+	}
+	handle @private_only {
+		{args[:]}
+	}
+	handle {
+		abort
+	}
+}
+
+# --- Internal/Private Services ---
+
+dns.ghepting.com {
+	tls /etc/ssl/ghepting/wildcard.crt /etc/ssl/ghepting/wildcard.key
+	import restricted reverse_proxy 127.0.0.1:5380
+}
+
+status.ghepting.com {
+	tls /etc/ssl/ghepting/wildcard.crt /etc/ssl/ghepting/wildcard.key
+	import restricted reverse_proxy 127.0.0.1:3001
+}
+
+wg.ghepting.com {
+	tls /etc/ssl/ghepting/wildcard.crt /etc/ssl/ghepting/wildcard.key
+	import restricted reverse_proxy 127.0.0.1:51821
+}
+
+pause.ghepting.com {
+	tls /etc/ssl/ghepting/wildcard.crt /etc/ssl/ghepting/wildcard.key
+	import restricted reverse_proxy 127.0.0.1:8080
+}
+
+db.goingapp.org {
+	import restricted reverse_proxy 127.0.0.1:5051
+}
+
+# --- Public Services ---
+
+plex.ghepting.com {
+	tls /etc/ssl/ghepting/wildcard.crt /etc/ssl/ghepting/wildcard.key
+	reverse_proxy https://192.168.86.11:32400 {
+		transport http {
+			tls_insecure_skip_verify
+		}
+		header_up Host {upstream_hostport}
+		header_up X-Real-IP {remote_host}
+	}
+}
+
+audio.ghepting.com {
+	tls /etc/ssl/ghepting/wildcard.crt /etc/ssl/ghepting/wildcard.key
+	reverse_proxy 127.0.0.1:13378
+}
+
+goingapp.org, api.goingapp.org {
+	reverse_proxy 127.0.0.1:8080
+}

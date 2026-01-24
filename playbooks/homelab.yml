@@ -1,0 +1,5 @@
+- name: Homelab Playbook
+  hosts: homelab
+  roles:
+    - common
+    - homelab

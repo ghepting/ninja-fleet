@@ -1,0 +1,16 @@
+---
+galaxy_info:
+  author: ninja_fleet
+  role_name: homelab
+  description: Homelab server specific configurations.
+  company: Ninja Fleet
+  license: MIT
+  min_ansible_version: "2.12"
+  platforms:
+    - name: Debian
+      versions:
+        - all
+  galaxy_tags:
+    - system
+    - server
+dependencies: []

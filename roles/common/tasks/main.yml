@@ -1,0 +1,11 @@
+- name: Install core utilities
+  ansible.builtin.include_tasks: core.yml
+
+- name: Install Docker
+  ansible.builtin.include_tasks: docker.yml
+
+- name: Install Homebrew
+  ansible.builtin.include_tasks: homebrew.yml
+
+- name: Install Flatpak
+  ansible.builtin.include_tasks: flatpak.yml

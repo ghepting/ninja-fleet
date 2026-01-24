@@ -1,0 +1,13 @@
+project_path: /opt/homelab
+cert_path: "/etc/ssl/{{ primary_domain }}"
+homelab_user: "{{ admin_username }}"
+homelab_group: "{{ admin_username }}"
+
+homelab_services:
+  - caddy
+  - wireguard
+  - technitium
+  - uptime-kuma
+  # - plex
+  - audiobookshelf
+  - romm

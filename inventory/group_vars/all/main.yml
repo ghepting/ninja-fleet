@@ -1,0 +1,10 @@
+---
+admin_username: ghepting
+ansible_user: "{{ admin_username }}"
+primary_domain: ghepting.com
+user_full_name: Gary Hepting
+user_email: ghepting@gmail.com
+git_signing_key: "key::ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIG/ZGbYhAlaVY6xTYKhQuvrO4KziFJwnTe41WtdQy/og"
+server_hostname: ninja-server
+server_vpn_ip: 10.13.13.1
+server_lan_ip: 192.168.86.10

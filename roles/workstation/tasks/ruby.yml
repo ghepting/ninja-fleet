@@ -1,0 +1,57 @@
+- name: ruby | Install rbenv and ruby-build (macOS)
+  community.general.homebrew:
+    name:
+      - rbenv
+      - ruby-build
+    state: present
+    update_homebrew: true
+  when: ansible_facts['os_family'] == 'Darwin'
+  become: false
+
+- name: ruby | Install rbenv and ruby-build (Debian/Ubuntu)
+  when: ansible_facts['pkg_mgr'] == 'apt'
+  become: true
+  ansible.builtin.apt:
+    name:
+      - rbenv
+      - ruby-build
+    state: present
+    update_cache: true
+
+- name: ruby | Install rbenv and ruby-build (Fedora)
+  when: ansible_facts['pkg_mgr'] == 'dnf'
+  become: true
+  ansible.builtin.dnf:
+    name:
+      - rbenv
+    state: present
+
+- name: ruby | Install rbenv and ruby-build (Arch)
+  community.general.pacman:
+    name:
+      - rbenv
+    state: present
+    update_cache: true
+  when: ansible_facts['pkg_mgr'] == 'pacman'
+  become: true
+
+- name: ruby | Initialize rbenv in .zshrc
+  ansible.builtin.blockinfile:
+    path: "~/.zshrc"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK: RBENV"
+    block: |
+      eval "$(rbenv init - zsh)"
+  become: false
+
+- name: ruby | Install latest ruby (via rbenv)
+  ansible.builtin.shell:
+    cmd: |
+      set -o pipefail
+      eval "$(rbenv init - zsh)"
+      latest_ruby=$(rbenv install -l | grep -v - | tail -1)
+      rbenv install $latest_ruby
+      rbenv global $latest_ruby
+    executable: /bin/zsh
+  args:
+    creates: "~/.rbenv/versions"
+  become: false

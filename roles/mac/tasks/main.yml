@@ -1,0 +1,9 @@
+- name: Mac | Install applications
+  when: ansible_facts['os_family'] == 'Darwin'
+  become: false
+  community.general.homebrew_cask:
+    name:
+      - 1password
+      - google-chrome
+      - google-drive
+    state: present

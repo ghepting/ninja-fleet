@@ -1,0 +1,97 @@
+---
+- name: Homelab | Ensure Docker is running
+  ansible.builtin.service:
+    name: docker
+    state: started
+    enabled: true
+  when: ansible_facts['os_family'] != 'Darwin'
+
+- name: Homelab | Install Python Docker dependencies
+  ansible.builtin.apt:
+    name: python3-docker
+    state: present
+    update_cache: true
+  when: ansible_facts['pkg_mgr'] == 'apt'
+
+- name: Homelab | Ensure project directory exists
+  ansible.builtin.file:
+    path: "{{ project_path }}"
+    state: directory
+    owner: "{{ admin_username }}"
+    group: "{{ admin_username }}"
+    mode: "0755"
+
+- name: Homelab | Create homelab services directory structure
+  ansible.builtin.file:
+    path: "{{ project_path }}/services/{{ item }}"
+    state: directory
+    owner: "{{ admin_username }}"
+    mode: "0755"
+  loop:
+    - caddy
+    - wireguard
+    - technitium
+    - uptime-kuma
+    - audiobookshelf
+    - romm
+
+- name: Homelab | Deploy main compose.yml
+  ansible.builtin.copy:
+    src: compose.yml
+    dest: "{{ project_path }}/compose.yml"
+    mode: "0644"
+    owner: "{{ admin_username }}"
+    group: "{{ admin_username }}"
+
+- name: Homelab | Deploy services compose files
+  ansible.builtin.copy:
+    src: services/
+    dest: "{{ project_path }}/services/"
+    mode: "0644"
+    owner: "{{ admin_username }}"
+    group: "{{ admin_username }}"
+
+- name: Homelab | Deploy Wireguard Environment File
+  ansible.builtin.template:
+    src: wireguard.env.j2
+    dest: "{{ project_path }}/services/wireguard/.env.wireguard"
+    mode: "0600"
+
+- name: Homelab | Ensure SSL directory exists
+  ansible.builtin.file:
+    path: "{{ cert_path }}/caddy/certs"
+    state: directory
+    mode: "0755"
+
+- name: Homelab | Deploy Wildcard SSL Certificates
+  ansible.builtin.copy:
+    src: "certs/{{ item }}"
+    dest: "{{ cert_path }}/caddy/certs/{{ item }}"
+    mode: "0600"
+    owner: root
+  loop:
+    - "{{ primary_domain }}.crt"
+    - "{{ primary_domain }}.key"
+  notify: Reload Caddy
+
+- name: Homelab | Deploy Caddyfile
+  ansible.builtin.copy:
+    src: services/caddy/Caddyfile
+    dest: "{{ project_path }}/services/caddy/Caddyfile"
+    mode: "0644"
+    owner: root
+    group: root
+  notify: Reload Caddy
+
+- name: Homelab | Ensure the homelab network exists
+  community.docker.docker_network:
+    name: homelab
+    state: present
+    driver: bridge
+
+- name: Homelab | Deploy Homelab Stack via Docker Compose
+  community.docker.docker_compose_v2:
+    project_src: "{{ project_path }}"
+    files:
+      - compose.yml
+    state: present

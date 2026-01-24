@@ -1,0 +1,17 @@
+- name: Install ruby/rbenv
+  ansible.builtin.include_tasks: ruby.yml
+
+- name: Install node/nvm
+  ansible.builtin.include_tasks: node.yml
+
+- name: Setup SSH config
+  ansible.builtin.include_tasks: ssh.yml
+
+- name: Setup Git config
+  ansible.builtin.include_tasks: git.yml
+
+- name: Install apps
+  ansible.builtin.include_tasks: apps.yml
+
+- name: Setup VPN
+  ansible.builtin.include_tasks: vpn.yml

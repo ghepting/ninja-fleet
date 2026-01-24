@@ -1,0 +1,4 @@
+- name: Mac Playbook
+  hosts: mac
+  roles:
+    - mac

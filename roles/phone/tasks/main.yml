@@ -1,0 +1,22 @@
+- name: Check if phone apps are installed
+  ansible.builtin.shell: |
+    adb shell pm list packages {{ item }}
+  loop:
+    - com.google.android.apps.drive
+    - com.1password.android
+    - com.wireguard.android
+  register: phone_app_check
+  delegate_to: localhost
+  changed_when: false
+  ignore_errors: true
+
+- name: Open Play Store for missing phone apps
+  ansible.builtin.shell: |
+    adb shell am start -a android.intent.action.VIEW -d "market://details?id={{ item.item }}"
+  loop: "{{ phone_app_check.results }}"
+  when: item.stdout == ""
+  delegate_to: localhost
+  changed_when: true
+
+- name: Include phone VPN setup tasks
+  ansible.builtin.include_tasks: vpn.yml

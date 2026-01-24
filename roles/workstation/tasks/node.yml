@@ -1,0 +1,27 @@
+- name: node | Install nvm
+  ansible.builtin.git:
+    repo: https://github.com/nvm-sh/nvm.git
+    dest: "~/.nvm"
+    version: v0.39.7
+  become: false
+
+- name: node | Source nvm in .zshrc
+  ansible.builtin.blockinfile:
+    path: "~/.zshrc"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK: NVM"
+    block: |
+      export NVM_DIR="$HOME/.nvm"
+      [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+      [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+  become: false
+
+- name: node | Install node
+  ansible.builtin.shell:
+    cmd: |
+      source ~/.nvm/nvm.sh
+      nvm install --lts
+      nvm alias default lts/*
+    executable: /bin/zsh
+  args:
+    creates: "~/.nvm/alias/default"
+  become: false

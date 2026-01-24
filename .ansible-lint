@@ -1,0 +1,16 @@
+---
+profile: production
+
+# exclude_paths:
+#   -
+
+var_naming_pattern: "^[a-z_][a-z0-9_]*$"
+
+use_default_rules: true
+
+enable_list:
+  - args
+  - empty-string-compare
+  - no-log-password
+  - name[prefix]
+  - yaml # ensure YAML formatting (indentation, etc.) is consistent

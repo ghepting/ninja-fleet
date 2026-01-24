@@ -1,0 +1,2 @@
+#!/bin/sh
+ansible-playbook --syntax-check site.yml playbooks/*.yml && ansible-lint
