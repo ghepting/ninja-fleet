@@ -18,7 +18,7 @@
     path: "{{ project_path }}"
     state: directory
     owner: "{{ admin_username }}"
-    group: "{{ admin_username }}"
+    group: "{{ admin_group | default(admin_username) }}"
     mode: "0755"
 
 - name: Homelab | Create homelab services directory structure
@@ -41,7 +41,7 @@
     dest: "{{ project_path }}/compose.yml"
     mode: "0644"
     owner: "{{ admin_username }}"
-    group: "{{ admin_username }}"
+    group: "{{ admin_group | default(admin_username) }}"
 
 - name: Homelab | Deploy services compose files
   ansible.builtin.copy:
@@ -49,7 +49,7 @@
     dest: "{{ project_path }}/services/"
     mode: "0644"
     owner: "{{ admin_username }}"
-    group: "{{ admin_username }}"
+    group: "{{ admin_group | default(admin_username) }}"
 
 - name: Homelab | Deploy Wireguard Environment File
   ansible.builtin.template:
