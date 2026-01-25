@@ -1,0 +1,18 @@
+---
+- name: apt | Ensure Steam GPG key is present
+  ansible.builtin.get_url:
+    url: https://repo.steampowered.com/steam/archive/stable/steam.gpg
+    dest: /usr/share/keyrings/steam.gpg
+    mode: "0644"
+  become: true
+  when: ansible_facts['pkg_mgr'] == 'apt'
+  tags: [common, core, apt]
+
+- name: apt | Ensure 1Password GPG key is present (if repo exists)
+  ansible.builtin.get_url:
+    url: https://downloads.1password.com/linux/keys/1password.asc
+    dest: /usr/share/keyrings/1password-archive-keyring.gpg
+    mode: "0644"
+  become: true
+  when: ansible_facts['pkg_mgr'] == 'apt'
+  tags: [common, core, apt]
