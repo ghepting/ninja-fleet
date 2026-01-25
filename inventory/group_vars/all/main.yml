@@ -8,3 +8,4 @@ git_signing_key: "key::ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIG/ZGbYhAlaVY6xTYKhQu
 server_hostname: ninja-server
 server_vpn_ip: 10.13.13.1
 server_lan_ip: 192.168.86.10
+server_ssh_user: ghepting

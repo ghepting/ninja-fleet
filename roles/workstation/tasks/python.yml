@@ -1,0 +1,24 @@
+- name: python | Install pyenv (macOS)
+  community.general.homebrew:
+    name: pyenv
+    state: present
+  when: ansible_facts['os_family'] == 'Darwin'
+  tags: [python, pyenv]
+
+- name: python | Install pyenv (Debian/Ubuntu)
+  ansible.builtin.apt:
+    name: pyenv
+    state: present
+  when: ansible_facts['pkg_mgr'] == 'apt'
+  become: true
+  tags: [python, pyenv]
+
+- name: python | Initialize pyenv in .zshrc
+  ansible.builtin.blockinfile:
+    path: "~/.zshrc"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK: PYENV"
+    block: |
+      export PYENV_ROOT="$HOME/.pyenv"
+      [[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
+      eval "$(pyenv init - zsh)"
+  tags: [python, pyenv]

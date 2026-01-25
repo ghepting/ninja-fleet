@@ -6,10 +6,10 @@ Match host * exec "test -z $SSH_TTY"
 Host *
     ForwardAgent yes
 
-Host {{ server_hostname}}
+Host {{ server_hostname }}
     HostName {{ server_lan_ip }}
-    User {{ admin_username }}
+    User {{ server_ssh_user }}
 
 Host {{ server_hostname }}-vpn
     HostName {{ server_vpn_ip }}
-    User {{ admin_username }}
+    User {{ server_ssh_user }}

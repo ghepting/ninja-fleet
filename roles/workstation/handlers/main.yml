@@ -3,13 +3,13 @@
     name: wg-quick@wg0
     state: restarted
     enabled: true
-  when: ansible_service_mgr == 'systemd'
+  when: ansible_facts['service_mgr'] == 'systemd'
   become: true
 
 - name: Restart WireGuard
   ansible.builtin.shell: |
     wg-quick down wg0 || true
     wg-quick up wg0
-  when: ansible_os_family == 'Darwin'
+  when: ansible_facts['os_family'] == 'Darwin'
   become: true
   changed_when: true

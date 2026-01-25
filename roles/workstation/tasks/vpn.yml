@@ -42,6 +42,8 @@
 
 - name: vpn | Find WireGuard config file in peer directory
   ansible.builtin.find:
+    paths: "{{ workstation_wg_peer_config_dir.files[0].path }}"
+    patterns: "*.conf"
   delegate_to: ninja-server
   register: workstation_wg_peer_config_exact
   when: workstation_wg_peer_config_dir.matched > 0
@@ -61,7 +63,7 @@
     state: directory
     mode: "0700"
     owner: root
-    group: root
+    group: "{{ (ansible_facts['os_family'] == 'Darwin') | ternary('wheel', 'root') }}"
   become: true
   when: workstation_wg_config_content.content is defined
 
@@ -71,7 +73,7 @@
     dest: /etc/wireguard/wg0.conf
     mode: "0600"
     owner: root
-    group: root
+    group: "{{ (ansible_facts['os_family'] == 'Darwin') | ternary('wheel', 'root') }}"
   become: true
   when: workstation_wg_config_content.content is defined
   notify: Restart WireGuard

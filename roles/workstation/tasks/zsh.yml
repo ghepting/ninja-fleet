@@ -1,0 +1,32 @@
+- name: zsh | Homebrew shellenv (macOS)
+  ansible.builtin.blockinfile:
+    path: "~/.zshrc"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK: HOMEBREW"
+    insertbefore: BOF
+    block: |
+      if [[ -x "/opt/homebrew/bin/brew" ]]; then
+        eval "$(/opt/homebrew/bin/brew shellenv)"
+      fi
+  when: ansible_facts['os_family'] == 'Darwin'
+  tags: [zsh, shell]
+
+- name: zsh | General Environment Settings
+  ansible.builtin.blockinfile:
+    path: "~/.zshrc"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK: GENERAL"
+    block: |
+      export EDITOR="vim"
+      export PATH="$HOME/.local/bin:$PATH"
+
+      # 1Password SSH Agent
+      if [[ -f "$HOME/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock" ]]; then
+        export SSH_AUTH_SOCK="$HOME/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
+      fi
+  tags: [zsh, shell]
+
+- name: zsh | Remove legacy dev-setup source
+  ansible.builtin.lineinfile:
+    path: "~/.zshrc"
+    regexp: 'source .*/\.zshrc\.dev'
+    state: absent
+  tags: [zsh, shell]
