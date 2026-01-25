@@ -65,3 +65,5 @@
   ansible.builtin.user:
     name: "{{ admin_username }}"
     shell: /bin/zsh
+  become: true
+  tags: [common, core, shell]
