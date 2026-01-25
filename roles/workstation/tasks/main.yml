@@ -1,17 +1,31 @@
+- name: Setup Shell Environment
+  ansible.builtin.include_tasks: zsh.yml
+  tags: [zsh, shell]
+
+- name: Install python/pyenv
+  ansible.builtin.include_tasks: python.yml
+  tags: [python, pyenv, shell]
+
 - name: Install ruby/rbenv
   ansible.builtin.include_tasks: ruby.yml
+  tags: [ruby, rbenv, shell]
 
 - name: Install node/nvm
   ansible.builtin.include_tasks: node.yml
+  tags: [node, nvm, shell]
 
 - name: Setup SSH config
   ansible.builtin.include_tasks: ssh.yml
+  tags: [ssh, shell]
 
 - name: Setup Git config
   ansible.builtin.include_tasks: git.yml
+  tags: [git, shell]
 
 - name: Install apps
   ansible.builtin.include_tasks: apps.yml
+  tags: [apps]
 
 - name: Setup VPN
   ansible.builtin.include_tasks: vpn.yml
+  tags: [vpn]

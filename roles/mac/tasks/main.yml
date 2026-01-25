@@ -7,3 +7,4 @@
       - google-chrome
       - google-drive
     state: present
+  tags: [mac, apps]

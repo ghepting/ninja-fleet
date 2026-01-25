@@ -9,6 +9,7 @@
   delegate_to: localhost
   changed_when: false
   ignore_errors: true
+  tags: [phone, apps]
 
 - name: Open Play Store for missing phone apps
   ansible.builtin.shell: |
@@ -17,6 +18,8 @@
   when: item.stdout == ""
   delegate_to: localhost
   changed_when: true
+  tags: [phone, apps]
 
 - name: Include phone VPN setup tasks
   ansible.builtin.include_tasks: vpn.yml
+  tags: [phone, vpn]

@@ -5,6 +5,7 @@
     state: started
     enabled: true
   when: ansible_facts['os_family'] != 'Darwin'
+  tags: [homelab, docker]
 
 - name: Homelab | Install Python Docker dependencies
   ansible.builtin.apt:
@@ -12,6 +13,7 @@
     state: present
     update_cache: true
   when: ansible_facts['pkg_mgr'] == 'apt'
+  tags: [homelab, docker]
 
 - name: Homelab | Ensure project directory exists
   ansible.builtin.file:
@@ -20,6 +22,7 @@
     owner: "{{ admin_username }}"
     group: "{{ admin_group | default(admin_username) }}"
     mode: "0755"
+  tags: [homelab, config]
 
 - name: Homelab | Create homelab services directory structure
   ansible.builtin.file:
@@ -34,6 +37,7 @@
     - uptime-kuma
     - audiobookshelf
     - romm
+  tags: [homelab, config]
 
 - name: Homelab | Deploy main compose.yml
   ansible.builtin.copy:
@@ -42,6 +46,7 @@
     mode: "0644"
     owner: "{{ admin_username }}"
     group: "{{ admin_group | default(admin_username) }}"
+  tags: [homelab, docker, config]
 
 - name: Homelab | Deploy services compose files
   ansible.builtin.copy:
@@ -50,18 +55,21 @@
     mode: "0644"
     owner: "{{ admin_username }}"
     group: "{{ admin_group | default(admin_username) }}"
+  tags: [homelab, docker, config]
 
 - name: Homelab | Deploy Wireguard Environment File
   ansible.builtin.template:
     src: wireguard.env.j2
     dest: "{{ project_path }}/services/wireguard/.env.wireguard"
     mode: "0600"
+  tags: [homelab, vpn, config]
 
 - name: Homelab | Ensure SSL directory exists
   ansible.builtin.file:
     path: "{{ cert_path }}/caddy/certs"
     state: directory
     mode: "0755"
+  tags: [homelab, caddy, ssl]
 
 - name: Homelab | Deploy Wildcard SSL Certificates
   ansible.builtin.copy:
@@ -73,6 +81,7 @@
     - "{{ primary_domain }}.crt"
     - "{{ primary_domain }}.key"
   notify: Reload Caddy
+  tags: [homelab, caddy, ssl]
 
 - name: Homelab | Deploy Caddyfile
   ansible.builtin.copy:
@@ -82,12 +91,14 @@
     owner: root
     group: root
   notify: Reload Caddy
+  tags: [homelab, caddy]
 
 - name: Homelab | Ensure the homelab network exists
   community.docker.docker_network:
     name: homelab
     state: present
     driver: bridge
+  tags: [homelab, docker, network]
 
 - name: Homelab | Deploy Homelab Stack via Docker Compose
   community.docker.docker_compose_v2:
@@ -95,3 +106,4 @@
     files:
       - compose.yml
     state: present
+  tags: [homelab, docker, deploy]
