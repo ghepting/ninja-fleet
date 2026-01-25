@@ -4,6 +4,7 @@
     name: docker
     state: started
     enabled: true
+  become: true
   when: ansible_facts['os_family'] != 'Darwin'
   tags: [homelab, docker]
 
@@ -12,6 +13,7 @@
     name: python3-docker
     state: present
     update_cache: true
+  become: true
   when: ansible_facts['pkg_mgr'] == 'apt'
   tags: [homelab, docker]
 
@@ -22,6 +24,7 @@
     owner: "{{ admin_username }}"
     group: "{{ admin_group | default(admin_username) }}"
     mode: "0755"
+  become: true
   tags: [homelab, config]
 
 - name: Homelab | Create homelab services directory structure
@@ -30,6 +33,7 @@
     state: directory
     owner: "{{ admin_username }}"
     mode: "0755"
+  become: true
   loop:
     - caddy
     - wireguard
@@ -46,6 +50,7 @@
     mode: "0644"
     owner: "{{ admin_username }}"
     group: "{{ admin_group | default(admin_username) }}"
+  become: true
   tags: [homelab, docker, config]
 
 - name: Homelab | Deploy services compose files
@@ -55,6 +60,7 @@
     mode: "0644"
     owner: "{{ admin_username }}"
     group: "{{ admin_group | default(admin_username) }}"
+  become: true
   tags: [homelab, docker, config]
 
 - name: Homelab | Deploy Wireguard Environment File
@@ -62,6 +68,7 @@
     src: wireguard.env.j2
     dest: "{{ project_path }}/services/wireguard/.env.wireguard"
     mode: "0600"
+  become: true
   tags: [homelab, vpn, config]
 
 - name: Homelab | Ensure SSL directory exists
@@ -69,6 +76,7 @@
     path: "{{ cert_path }}/caddy/certs"
     state: directory
     mode: "0755"
+  become: true
   tags: [homelab, caddy, ssl]
 
 - name: Homelab | Deploy Wildcard SSL Certificates
@@ -77,6 +85,7 @@
     dest: "{{ cert_path }}/caddy/certs/{{ item }}"
     mode: "0600"
     owner: root
+  become: true
   loop:
     - "{{ primary_domain }}.crt"
     - "{{ primary_domain }}.key"
@@ -90,6 +99,7 @@
     mode: "0644"
     owner: root
     group: root
+  become: true
   notify: Reload Caddy
   tags: [homelab, caddy]
 
@@ -98,6 +108,7 @@
     name: homelab
     state: present
     driver: bridge
+  become: true
   tags: [homelab, docker, network]
 
 - name: Homelab | Deploy Homelab Stack via Docker Compose
@@ -106,4 +117,5 @@
     files:
       - compose.yml
     state: present
+  become: true
   tags: [homelab, docker, deploy]

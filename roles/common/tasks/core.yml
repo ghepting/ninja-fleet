@@ -13,6 +13,11 @@
       - direnv
     state: present
     update_homebrew: true
+  register: common_homebrew_core_install
+  until: common_homebrew_core_install is success
+  retries: 3
+  delay: 10
+  tags: [common, core, homebrew]
 
 - name: core | Install core utilities (Debian/Ubuntu)
   when: ansible_facts['pkg_mgr'] == 'apt'
@@ -65,5 +70,5 @@
   ansible.builtin.user:
     name: "{{ admin_username }}"
     shell: /bin/zsh
-  become: true
+  become: "{{ ansible_facts['os_family'] != 'Darwin' }}"
   tags: [common, core, shell]

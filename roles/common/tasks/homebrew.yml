@@ -1,8 +1,0 @@
----
-- name: homebrew | Install Homebrew
-  when: ansible_facts['os_family'] == 'Darwin'
-  become: false
-  community.general.homebrew:
-    name: homebrew
-    state: present
-    update_homebrew: true

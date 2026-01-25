@@ -12,27 +12,6 @@
   when: ansible_facts['pkg_mgr'] == 'apt'
   become: true
   block:
-    - name: docker | Install Docker deps
-      ansible.builtin.apt:
-        name:
-          - ca-certificates
-          - curl
-          - gnupg
-        state: present
-        update_cache: true
-
-    - name: docker | Add Docker GPG key
-      ansible.builtin.apt_key:
-        url: https://download.docker.com/linux/ubuntu/gpg
-        state: present
-
-    - name: docker | Add Docker repo
-      ansible.builtin.apt_repository:
-        repo: >-
-          deb [arch=amd64] https://download.docker.com/linux/{{ ansible_facts['distribution'] | lower }}
-          {{ ansible_facts['distribution_release'] }} stable
-        state: present
-
     - name: docker | Install Docker packages
       ansible.builtin.apt:
         name:
@@ -43,6 +22,7 @@
           - docker-compose-plugin
         state: present
         update_cache: true
+      tags: [common, docker]
 
 - name: docker | Install Docker (Fedora)
   when: ansible_facts['pkg_mgr'] == 'dnf'

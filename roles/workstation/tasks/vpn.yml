@@ -9,6 +9,7 @@
   ansible.builtin.apt:
     name: wireguard-tools
     state: present
+  become: true
   when: ansible_facts['pkg_mgr'] == 'apt'
   tags: [workstation, vpn]
 
@@ -16,6 +17,7 @@
   ansible.builtin.dnf:
     name: wireguard-tools
     state: present
+  become: true
   when: ansible_facts['pkg_mgr'] == 'dnf'
   tags: [workstation, vpn]
 
@@ -23,6 +25,7 @@
   community.general.pacman:
     name: wireguard-tools
     state: present
+  become: true
   when: ansible_facts['pkg_mgr'] == 'pacman'
   tags: [workstation, vpn]
 
@@ -59,21 +62,23 @@
 
 - name: vpn | Ensure WireGuard directory exists
   ansible.builtin.file:
-    path: /etc/wireguard
+    path: "{{ (ansible_facts['os_family'] == 'Darwin') | ternary('/opt/homebrew/etc/wireguard', '/etc/wireguard') }}"
     state: directory
     mode: "0700"
-    owner: root
-    group: "{{ (ansible_facts['os_family'] == 'Darwin') | ternary('wheel', 'root') }}"
+    owner: "{{ (ansible_facts['os_family'] == 'Darwin') | ternary(admin_username, 'root') }}"
+    group: "{{ (ansible_facts['os_family'] == 'Darwin') | ternary('admin', 'root') }}"
+  become: "{{ ansible_facts['os_family'] != 'Darwin' }}"
   tags: [workstation, vpn]
   when: workstation_wg_config_content.content is defined
 
 - name: vpn | Write WireGuard config file
   ansible.builtin.copy:
     content: "{{ workstation_wg_config_content['content'] | b64decode }}"
-    dest: /etc/wireguard/wg0.conf
+    dest: "{{ (ansible_facts['os_family'] == 'Darwin') | ternary('/opt/homebrew/etc/wireguard/wg0.conf', '/etc/wireguard/wg0.conf') }}"
     mode: "0600"
-    owner: root
-    group: "{{ (ansible_facts['os_family'] == 'Darwin') | ternary('wheel', 'root') }}"
+    owner: "{{ (ansible_facts['os_family'] == 'Darwin') | ternary(admin_username, 'root') }}"
+    group: "{{ (ansible_facts['os_family'] == 'Darwin') | ternary('admin', 'root') }}"
+  become: "{{ ansible_facts['os_family'] != 'Darwin' }}"
   tags: [workstation, vpn]
   when: workstation_wg_config_content.content is defined
   notify: Restart WireGuard
