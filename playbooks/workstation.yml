@@ -1,0 +1,5 @@
+- name: Workstation Playbook
+  hosts: workstation
+  roles:
+    - common
+    - workstation

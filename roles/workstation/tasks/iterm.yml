@@ -1,0 +1,35 @@
+- name: iterm | Ensure iTerm2 presets directory exists
+  ansible.builtin.file:
+    path: "~/.iterm2-presets"
+    state: directory
+    mode: "0755"
+  when:
+    - ansible_facts['os_family'] == 'Darwin'
+  register: workstation_iterm_dir
+  tags: [iterm, colors]
+
+- name: iterm | Download Solarized iTerm2 Colors
+  ansible.builtin.get_url:
+    url: "https://raw.githubusercontent.com/altercation/solarized/master/iterm2-colors-solarized/{{ item | replace(' ', '%20') }}.itermcolors"
+    dest: "~/.iterm2-presets/{{ item }}.itermcolors"
+    mode: "0644"
+  when:
+    - ansible_facts['os_family'] == 'Darwin'
+    - not (ansible_check_mode and workstation_iterm_dir.changed)
+  loop:
+    - "Solarized Dark"
+    - "Solarized Light"
+  register: workstation_iterm_presets
+  tags: [iterm, colors]
+
+- name: iterm | Import presets into iTerm2 (macOS)
+  ansible.builtin.shell:
+    cmd: open -a /Applications/iTerm.app "$HOME/.iterm2-presets/{{ item }}.itermcolors"
+  loop:
+    - "Solarized Dark"
+    - "Solarized Light"
+  when:
+    - ansible_facts['os_family'] == 'Darwin'
+    - workstation_iterm_presets.changed
+  changed_when: workstation_iterm_presets.changed
+  tags: [iterm, colors]

@@ -1,0 +1,7 @@
+- name: git | Configure git
+  ansible.builtin.template:
+    src: gitconfig.j2
+    dest: "{{ ansible_facts['env']['HOME'] }}/.gitconfig"
+    owner: "{{ admin_username }}"
+    group: "{{ admin_group | default(admin_username) }}"
+    mode: "0644"

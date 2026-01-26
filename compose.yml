@@ -1,0 +1,19 @@
+include:
+  - ./services/caddy/compose.yml
+  - ./services/technitium/compose.yml
+  - ./services/wireguard/compose.yml
+  - ./services/uptime-kuma/compose.yml
+  - ./services/audiobookshelf/compose.yml
+
+networks:
+  # homelab - internal network for homelab services
+  homelab:
+    name: homelab
+    driver: bridge
+
+  # kamal - hosted clients using kamal deployments
+  kamal:
+    external: true
+  # goingapp.org - hosted client using kamal deployments
+  going_production:
+    external: true

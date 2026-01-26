@@ -1,0 +1,38 @@
+---
+- name: apps | Install Chocolatey
+  ansible.windows.win_chocolatey:
+    name: chocolatey
+    state: present
+  tags: [plex, apps, choco]
+
+- name: apps | Install Tools and Media Apps
+  ansible.windows.win_chocolatey:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - googlechrome
+    - streamfab
+    - musicfab
+    - dvdfab-passkey
+    - onecommander
+    - teracopy
+    - potplayer
+    - freefilesync
+    - nssm
+  tags: [plex, apps]
+
+- name: apps | Install Plex Media Server
+  ansible.windows.win_chocolatey:
+    name: plexmediaserver
+    state: present
+  notify: Restart Plex Service
+  tags: [plex, apps]
+
+- name: apps | Define Plex Boot Service (NSSM)
+  ansible.windows.win_nssm:
+    name: "PlexBootService"
+    application: "C:\\Program Files\\Plex\\Plex Media Server\\Plex Media Server.exe"
+    state: present
+    status: started
+    start_mode: auto
+  tags: [plex, apps, service]

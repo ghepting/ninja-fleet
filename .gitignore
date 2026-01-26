@@ -1,0 +1,48 @@
+# Ansible
+.ansible/
+*.retry
+*.log
+
+# Inventory (Sensitive Data)
+inventory/hosts.ini
+inventory/group_vars/all/main.yml
+inventory/group_vars/all/secrets.yml
+inventory/host_vars/*.yml
+!inventory/hosts.example.ini
+!inventory/group_vars/all/main.example.yml
+!inventory/group_vars/all/secrets.example.yml
+!inventory/host_vars/*.example.yml
+
+# Secrets
+.env
+*.pem
+*.key
+!public.key
+
+# Vault password file
+vault_1password.sh
+
+# SSL/TLS Certificates
+roles/homelab/files/certs/*
+!roles/homelab/files/certs/*.example.crt
+!roles/homelab/files/certs/*.example.key
+
+# Caddy configuration with domains
+roles/homelab/files/services/caddy/Caddyfile
+!roles/homelab/files/services/caddy/Caddyfile.example
+
+# Service compose files with sensitive configuration
+roles/homelab/files/compose.yml
+roles/homelab/files/services/*/compose.yml
+!roles/homelab/files/compose.example.yml
+!roles/homelab/files/services/*/compose.example.yml
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db

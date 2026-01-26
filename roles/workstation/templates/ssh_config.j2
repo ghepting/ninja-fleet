@@ -1,0 +1,15 @@
+# Use local 1Password agent if not in an SSH session (avoids breaking forwarded agent on servers)
+Match host * exec "test -z $SSH_TTY"
+    IdentityAgent ~/.1password/agent.sock
+
+# Otherwise, use the forwarded SSH_AUTH_SOCK
+Host *
+    ForwardAgent yes
+
+Host {{ server_hostname }}
+    HostName {{ server_lan_ip }}
+    User {{ server_ssh_user }}
+
+Host {{ server_hostname }}-vpn
+    HostName {{ server_vpn_ip }}
+    User {{ server_ssh_user }}

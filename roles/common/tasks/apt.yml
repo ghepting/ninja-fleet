@@ -1,0 +1,82 @@
+---
+- name: apt | Ensure prerequisite packages are installed
+  ansible.builtin.apt:
+    name:
+      - gnupg
+      - ca-certificates
+    state: present
+    update_cache: true
+  become: true
+  when: ansible_facts['pkg_mgr'] == 'apt'
+  tags: [common, core, apt]
+
+- name: apt | Ensure keyrings directory exists
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: "0755"
+  become: true
+  when: ansible_facts['pkg_mgr'] == 'apt'
+  tags: [common, core, apt]
+
+# --- Setup GPG Keys ---
+
+- name: apt | Download Docker GPG key (armored)
+  ansible.builtin.get_url:
+    url: "https://download.docker.com/linux/{{ ansible_facts['distribution'] | lower }}/gpg"
+    dest: /etc/apt/keyrings/docker.asc
+    mode: "0644"
+  become: true
+  when: ansible_facts['pkg_mgr'] == 'apt'
+  tags: [common, core, apt, docker]
+
+- name: apt | Dearmor Docker GPG key
+  ansible.builtin.shell:
+    cmd: "set -o pipefail && gpg --dearmor < /etc/apt/keyrings/docker.asc | tee /etc/apt/keyrings/docker.gpg > /dev/null"
+    executable: /bin/bash
+    creates: /etc/apt/keyrings/docker.gpg
+  become: true
+  when: ansible_facts['pkg_mgr'] == 'apt'
+  tags: [common, core, apt, docker]
+
+- name: apt | Ensure Steam GPG key is present
+  ansible.builtin.get_url:
+    url: https://repo.steampowered.com/steam/archive/stable/steam.gpg
+    dest: /usr/share/keyrings/steam.gpg
+    mode: "0644"
+  become: true
+  when: ansible_facts['pkg_mgr'] == 'apt'
+  tags: [common, core, apt]
+
+- name: apt | Download 1Password GPG key (armored)
+  ansible.builtin.get_url:
+    url: https://downloads.1password.com/linux/keys/1password.asc
+    dest: /usr/share/keyrings/1password.asc
+    mode: "0644"
+  become: true
+  when: ansible_facts['pkg_mgr'] == 'apt'
+  tags: [common, core, apt]
+
+- name: apt | Dearmor 1Password GPG key
+  ansible.builtin.shell:
+    cmd: "set -o pipefail && gpg --dearmor < /usr/share/keyrings/1password.asc | tee /usr/share/keyrings/1password-archive-keyring.gpg > /dev/null"
+    executable: /bin/bash
+    creates: /usr/share/keyrings/1password-archive-keyring.gpg
+  become: true
+  when: ansible_facts['pkg_mgr'] == 'apt'
+  tags: [common, core, apt]
+
+# --- Configure Repositories ---
+
+- name: apt | Ensure Docker repo is correctly defined (Signed-By)
+  ansible.builtin.apt_repository:
+    repo: >-
+      deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg]
+      https://download.docker.com/linux/{{ ansible_facts['distribution'] | lower }}
+      {{ ansible_facts['distribution_release'] }} stable
+    filename: docker
+    state: present
+    update_cache: true
+  become: true
+  when: ansible_facts['pkg_mgr'] == 'apt'
+  tags: [common, core, apt, docker]

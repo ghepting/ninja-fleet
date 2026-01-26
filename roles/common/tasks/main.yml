@@ -1,0 +1,16 @@
+- name: Setup apt GPG keys
+  ansible.builtin.include_tasks: apt.yml
+  when: ansible_facts['pkg_mgr'] == 'apt'
+  tags: [common, core, apt]
+
+- name: Install core utilities
+  ansible.builtin.include_tasks: core.yml
+  tags: [common, core]
+
+- name: Install Docker
+  ansible.builtin.include_tasks: docker.yml
+  tags: [common, docker]
+
+- name: Install Flatpak
+  ansible.builtin.include_tasks: flatpak.yml
+  tags: [common, flatpak]

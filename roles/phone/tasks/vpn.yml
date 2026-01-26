@@ -1,0 +1,40 @@
+- name: vpn | Find WireGuard peer config directory on server
+  ansible.builtin.find:
+    paths: /opt/homelab/services/wireguard/config
+    file_type: directory
+    patterns: "peer_{{ wireguard_peer }}"
+  delegate_to: ninja-server
+  register: phone_wg_peer_config_dir
+  become: true
+
+- name: vpn | Find WireGuard config file in peer directory
+  ansible.builtin.find:
+  delegate_to: ninja-server
+  register: phone_wg_peer_config_exact
+  when: phone_wg_peer_config_dir.matched > 0
+  become: true
+
+- name: vpn | Read WireGuard config from server
+  ansible.builtin.slurp:
+    src: "{{ phone_wg_peer_config_exact.files[0].path }}"
+  delegate_to: ninja-server
+  register: phone_wg_config_content
+  when: phone_wg_peer_config_dir.matched > 0 and phone_wg_peer_config_exact.matched > 0
+  become: true
+
+- name: vpn | Push WireGuard config to phone via ADB
+  ansible.builtin.shell: |
+    echo "{{ phone_wg_config_content.content | b64decode }}" > /tmp/{{ wireguard_peer }}.conf
+    adb push /tmp/{{ wireguard_peer }}.conf /sdcard/Download/ninja-fleet.conf
+    rm /tmp/{{ wireguard_peer }}.conf
+  delegate_to: localhost
+  when: phone_wg_peer_config_dir.matched > 0 and phone_wg_peer_config_exact.matched > 0
+  changed_when: true
+
+- name: vpn | Provide import instructions
+  ansible.builtin.debug:
+    msg:
+      - "WireGuard config has been pushed to your phone's Download folder as 'ninja-fleet.conf'."
+      - "1. Open the WireGuard app on your phone."
+      - "2. Tap '+' -> 'Import from file or archive'."
+      - "3. Select 'ninja-fleet.conf' from the Downloads folder."

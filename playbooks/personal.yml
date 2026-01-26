@@ -1,0 +1,4 @@
+- name: Personal Playbook
+  hosts: personal
+  roles:
+    - personal

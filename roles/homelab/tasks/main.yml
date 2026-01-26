@@ -1,0 +1,151 @@
+---
+- name: Homelab | Ensure Docker is running
+  ansible.builtin.service:
+    name: docker
+    state: started
+    enabled: true
+  become: true
+  when: ansible_facts['os_family'] != 'Darwin'
+  tags: [homelab, docker]
+
+- name: Homelab | Install Python Docker dependencies
+  ansible.builtin.apt:
+    name: python3-docker
+    state: present
+    update_cache: true
+  become: true
+  when: ansible_facts['pkg_mgr'] == 'apt'
+  tags: [homelab, docker]
+
+- name: Homelab | Ensure project directory exists
+  ansible.builtin.file:
+    path: "{{ project_path }}"
+    state: directory
+    owner: "{{ admin_username }}"
+    group: "{{ admin_group | default(admin_username) }}"
+    mode: "0755"
+  become: true
+  tags: [homelab, config]
+
+- name: Homelab | Create homelab services directory structure
+  ansible.builtin.file:
+    path: "{{ project_path }}/services/{{ item }}"
+    state: directory
+    owner: "{{ admin_username }}"
+    mode: "0755"
+  become: true
+  loop:
+    - caddy
+    - wireguard
+    - technitium
+    - uptime-kuma
+    - audiobookshelf
+    - romm
+  tags: [homelab, config]
+
+- name: Homelab | Deploy main compose.yml
+  ansible.builtin.copy:
+    src: compose.yml
+    dest: "{{ project_path }}/compose.yml"
+    mode: "0644"
+    owner: "{{ admin_username }}"
+    group: "{{ admin_group | default(admin_username) }}"
+  become: true
+  tags: [homelab, docker, config]
+
+- name: Homelab | Deploy WireGuard compose file
+  ansible.builtin.template:
+    src: wireguard-compose.yml.j2
+    dest: "{{ project_path }}/services/wireguard/compose.yml"
+    mode: "0644"
+    owner: "{{ admin_username }}"
+    group: "{{ admin_group | default(admin_username) }}"
+  become: true
+  tags: [homelab, docker, config, vpn]
+
+- name: Homelab | Deploy Technitium compose file
+  ansible.builtin.template:
+    src: technitium-compose.yml.j2
+    dest: "{{ project_path }}/services/technitium/compose.yml"
+    mode: "0644"
+    owner: "{{ admin_username }}"
+    group: "{{ admin_group | default(admin_username) }}"
+  become: true
+  tags: [homelab, docker, config, dns]
+
+- name: Homelab | Deploy Audiobookshelf compose file
+  ansible.builtin.template:
+    src: audiobookshelf-compose.yml.j2
+    dest: "{{ project_path }}/services/audiobookshelf/compose.yml"
+    mode: "0644"
+    owner: "{{ admin_username }}"
+    group: "{{ admin_group | default(admin_username) }}"
+  become: true
+  tags: [homelab, docker, config]
+
+- name: Homelab | Deploy services compose files
+  ansible.builtin.copy:
+    src: services/
+    dest: "{{ project_path }}/services/"
+    mode: "0644"
+    owner: "{{ admin_username }}"
+    group: "{{ admin_group | default(admin_username) }}"
+  become: true
+  tags: [homelab, docker, config]
+
+- name: Homelab | Deploy Wireguard Environment File
+  ansible.builtin.template:
+    src: wireguard.env.j2
+    dest: "{{ project_path }}/services/wireguard/.env.wireguard"
+    mode: "0600"
+  become: true
+  tags: [homelab, vpn, config]
+
+- name: Homelab | Ensure SSL directory exists
+  ansible.builtin.file:
+    path: "{{ cert_path }}/caddy/certs"
+    state: directory
+    mode: "0755"
+  become: true
+  tags: [homelab, caddy, ssl]
+
+- name: Homelab | Deploy Wildcard SSL Certificates
+  ansible.builtin.copy:
+    src: "certs/{{ item }}"
+    dest: "{{ cert_path }}/caddy/certs/{{ item }}"
+    mode: "0600"
+    owner: root
+  become: true
+  loop:
+    - "{{ primary_domain }}.crt"
+    - "{{ primary_domain }}.key"
+  notify: Reload Caddy
+  tags: [homelab, caddy, ssl]
+
+- name: Homelab | Deploy Caddyfile
+  ansible.builtin.template:
+    src: Caddyfile.j2
+    dest: "{{ project_path }}/services/caddy/Caddyfile"
+    mode: "0644"
+    owner: root
+    group: root
+  become: true
+  notify: Reload Caddy
+  tags: [homelab, caddy]
+
+- name: Homelab | Ensure the homelab network exists
+  community.docker.docker_network:
+    name: homelab
+    state: present
+    driver: bridge
+  become: true
+  tags: [homelab, docker, network]
+
+- name: Homelab | Deploy Homelab Stack via Docker Compose
+  community.docker.docker_compose_v2:
+    project_src: "{{ project_path }}"
+    files:
+      - compose.yml
+    state: present
+  become: true
+  tags: [homelab, docker, deploy]

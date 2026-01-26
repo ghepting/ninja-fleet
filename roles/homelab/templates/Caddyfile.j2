@@ -1,0 +1,63 @@
+{
+	email {{ user_email }}
+}
+
+(restricted) {
+	@private_only {
+		remote_ip private_ranges
+	}
+	handle @private_only {
+		{args[:]}
+	}
+	handle {
+		abort
+	}
+}
+
+# --- Internal/Private Services ---
+
+dns.{{ primary_domain }} {
+	tls /etc/ssl/{{ primary_domain | replace('.', '_') }}/wildcard.crt /etc/ssl/{{ primary_domain | replace('.', '_') }}/wildcard.key
+	import restricted reverse_proxy 127.0.0.1:5380
+}
+
+status.{{ primary_domain }} {
+	tls /etc/ssl/{{ primary_domain | replace('.', '_') }}/wildcard.crt /etc/ssl/{{ primary_domain | replace('.', '_') }}/wildcard.key
+	import restricted reverse_proxy 127.0.0.1:3001
+}
+
+wg.{{ primary_domain }} {
+	tls /etc/ssl/{{ primary_domain | replace('.', '_') }}/wildcard.crt /etc/ssl/{{ primary_domain | replace('.', '_') }}/wildcard.key
+	import restricted reverse_proxy 127.0.0.1:51821
+}
+
+pause.{{ primary_domain }} {
+	tls /etc/ssl/{{ primary_domain | replace('.', '_') }}/wildcard.crt /etc/ssl/{{ primary_domain | replace('.', '_') }}/wildcard.key
+	import restricted reverse_proxy 127.0.0.1:8080
+}
+
+# Add your other domain configurations here
+# Example:
+# db.otherdomain.org {
+# 	import restricted reverse_proxy 127.0.0.1:5051
+# }
+
+# --- Public Services ---
+
+plex.{{ primary_domain }} {
+	tls /etc/ssl/{{ primary_domain | replace('.', '_') }}/wildcard.crt /etc/ssl/{{ primary_domain | replace('.', '_') }}/wildcard.key
+	reverse_proxy https://{{ plex_server_ip | default('192.168.1.3') }}:32400 {
+		transport http {
+			tls_insecure_skip_verify
+		}
+		header_up Host {upstream_hostport}
+		header_up X-Real-IP {remote_host}
+	}
+}
+
+audio.{{ primary_domain }} {
+	tls /etc/ssl/{{ primary_domain | replace('.', '_') }}/wildcard.crt /etc/ssl/{{ primary_domain | replace('.', '_') }}/wildcard.key
+	reverse_proxy 127.0.0.1:13378
+}
+
+# Add other public domains as needed

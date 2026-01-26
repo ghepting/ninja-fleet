@@ -1,0 +1,15 @@
+---
+- name: Homelab
+  ansible.builtin.import_playbook: playbooks/homelab.yml
+
+- name: Workstation
+  ansible.builtin.import_playbook: playbooks/workstation.yml
+
+- name: Plex Server
+  ansible.builtin.import_playbook: playbooks/plex_server.yml
+
+- name: Personal
+  ansible.builtin.import_playbook: playbooks/personal.yml
+
+- name: Phone
+  ansible.builtin.import_playbook: playbooks/phone.yml

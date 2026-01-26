@@ -1,0 +1,7 @@
+- name: ssh | Setup ~/.ssh/config
+  ansible.builtin.template:
+    src: ssh_config.j2
+    dest: "{{ ansible_facts['env']['HOME'] }}/.ssh/config"
+    owner: "{{ admin_username }}"
+    group: "{{ admin_group | default(admin_username) }}"
+    mode: "0600"

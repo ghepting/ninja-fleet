@@ -1,0 +1,13 @@
+- name: ai_tools | Install Claude Code CLI
+  ansible.builtin.shell:
+    cmd: set -o pipefail && curl -fsSL https://claude.ai/install.sh | zsh
+    executable: /bin/zsh
+    creates: "~/.local/bin/claude"
+  tags: [ai, claude]
+
+- name: ai_tools | Install Gemini CLI
+  community.general.npm:
+    name: "@google/gemini-cli"
+    global: true
+    state: present
+  tags: [ai, gemini]

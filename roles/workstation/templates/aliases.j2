@@ -1,0 +1,214 @@
+# ensure sudo (and other) commands expand custom aliases args (POSIX shell spec for next-word expansion)
+alias sudo='sudo '
+alias watch='watch '
+alias direnv='direnv '
+
+# ensure tmux uses direnv
+alias tmux='direnv exec / tmux'
+
+# normalize v/vi/vim
+alias v='vim'
+alias vi='vim'
+
+# bundler
+alias be='bundle exec'
+
+# chrome GPU conf on fedora (ninja-vengeance)
+if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+  alias chrome='NVD_BACKEND=direct google-chrome --enable-features=VaapiVideoDecoder,VaapiIgnoreDriverChecks,VaapiOnNvidiaGPUs --disable-features=UseChromeOSDirectVideoDecoder --ignore-gpu-blocklist --ozone-platform=wayland'
+fi
+
+# ninja-server
+alias ninja='ssh -A {{ ansible_user }}@{{ server_vpn_ip }}'
+alias ninjastats='ssh -A -T {{ ansible_user }}@{{ server_vpn_ip }} "docker stats"'
+alias caddyreload='docker exec -w /etc/caddy caddy caddy reload'
+alias caddyfmt='docker exec -w /etc/caddy caddy caddy fmt --overwrite'
+alias rclonestatus='sudo systemctl status rclone-gdrive.service'
+alias rclonereload='sudo systemctl daemon-reload && sudo systemctl restart rclone-gdrive.service'
+
+# VPN management on ninja-vengeance
+alias vpnup='nmcli connection up ninja-vengeance'
+alias vpndown='nmcli connection down ninja-vengeance'
+alias vpnstatus='sudo wg show'
+# ninja-vengeance (fedora) shinanigens
+alias fixethernet='sudo modprobe -r igc && sudo modprobe igc && sudo systemctl restart NetworkManager'
+
+
+# docker
+{% raw %}
+alias dps='docker ps -a --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"'
+{% endraw %}
+
+# rails/rake
+alias rs='bundle exec rails s'
+alias rc='bundle exec rails c'
+alias rr='bundle exec rails r'
+alias ss='bundle exec sidekiq -q low -q default -q high'
+
+# rubocop
+alias cop='bundle exec rubocop'
+alias pig='bundle exec rubocop --auto-correct'
+
+# grep
+alias grep='grep --color=always'
+
+# list
+alias l='ls -alF'
+
+# cd
+alias cda='cd ~/Development/apps'
+alias cdsdk='cd ~/Development/ui-extensions-sdk'
+
+# git
+alias ga='git add'
+alias gap='git add -p'
+alias gb='git branch'
+alias gbn='git symbolic-ref --quiet --short HEAD'
+alias gbm="git remote show origin | sed -n '/HEAD branch/s/.*: //p'"
+alias gca='git commit --amend'
+alias gcan='git commit --amend --no-edit'
+alias gd='git diff'
+alias gds='git diff --stat'
+alias gdc='git diff --cached'
+alias gfp='git fetch && git pull'
+alias gg='git grep'
+alias gl='git log --decorate'
+alias glb='git log main..HEAD --oneline'
+alias gl1='git log --oneline'
+alias gld='git log --decorate --all --oneline --graph'
+alias glf='git ls-files'
+alias glg="git log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %aN: %s %Cgreen(%cr)%Creset' --abbrev-commit --date=relative"
+alias gln='git log -n'
+alias glp='git log -p'
+alias glpn='git log -p -n'
+alias gs='git status'
+alias gsw="watch --color 'git log main..HEAD --oneline && git -c color.status=always status --short -b'"
+alias gprune='git remote prune origin'
+alias gclean='git clean -fxd -e config/ node_modules/ tmp/'
+alias grp='git rev-parse head'
+
+gco() {
+  if [ $# -eq 0 ]; then
+    local target=$(git rev-parse --abbrev-ref origin/HEAD 2>/dev/null | sed 's|^origin/||')
+    git checkout "${target:-main}"
+  else
+    git checkout "$@"
+  fi
+}
+
+gchanged() {
+  if [ $# -ge 1 ]; then
+    git diff-tree --no-commit-id --name-only -r "$1"
+  else
+    git diff-tree --no-commit-id --name-only -r HEAD
+  fi
+}
+
+gbh() {
+  local count=${1:-10}
+  git for-each-ref --count="$count" --sort=-committerdate refs/heads/ --format="%(refname:short)"
+}
+
+myip() {
+  if [[ "$OSTYPE" == "darwin"* ]]; then
+    ipconfig getifaddr en0
+  else
+    ip -4 addr show | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | grep -v '127.0.0.1'
+  fi
+}
+
+start() {
+  cd ~/Development/"$1"
+  dev
+  tmux a -t dev || tmux new -s dev
+}
+
+catdir() {
+  cat `ls -d "$1"/*.*`
+}
+
+set_term_title() {
+  echo -ne "\033]0;${1:-title}\007"
+}
+
+set_term_tab_color() {
+  if [ $# -eq 3 ]; then
+    echo -e "\033]6;1;bg;red;brightness;$1\a"
+    echo -e "\033]6;1;bg;green;brightness;$2\a"
+    echo -e "\033]6;1;bg;blue;brightness;$3\a"
+  else
+    echo -e "\033]6;1;bg;*;default\a"
+  fi
+}
+
+set_term_bgcolor() {
+  if [ $# -eq 3 ]; then
+    local R=$1 G=$2 B=$3
+    osascript <<EOF
+tell application "iTerm"
+  tell the current window
+    tell the current session
+      set background color to {$(($R*65535/255)), $(($G*65535/255)), $(($B*65535/255))}
+    end tell
+  end tell
+end tell
+EOF
+  fi
+}
+
+dev() {
+  set_term_bgcolor 0 25 40
+  set_term_title development
+  set_term_tab_color 10 100 255
+}
+
+staging() {
+  set_term_bgcolor 0 35 15
+  set_term_title staging
+  set_term_tab_color 120 255 120
+}
+
+prod() {
+  set_term_bgcolor 38 8 0
+  set_term_title production
+  set_term_tab_color 255 40 40
+}
+
+mov2mp4() {
+  if [ $# -ge 2 ]; then
+    ffmpeg -i "$1" -preset fast -c:v libx264 -crf 20 -vf "scale=in_color_matrix=bt601:out_color_matrix=bt709" "$2"
+  fi
+}
+
+weather() {
+  local query=$(echo "${@:-?1Fu}" | sed 's/ /+/g')
+  curl "wttr.in/$query"
+}
+
+cpu() {
+  if [[ "$OSTYPE" == "darwin"* ]]; then
+    sysctl -n vm.loadavg
+  else
+    echo "CPU Load:  $(cat /proc/loadavg | awk '{print $1}')"
+  fi
+}
+
+scruball() {
+  sudo btrfs scrub start /
+  sudo btrfs scrub start /mnt/storage
+}
+
+scrubstatus() {
+  sudo -v || return 1
+  echo "------------------------------------------------------"
+  echo "ROOT (/)"
+  sudo btrfs scrub status /
+  echo "------------------------------------------------------"
+  echo "STORAGE (/mnt/storage)"
+  sudo btrfs scrub status /mnt/storage
+  echo "------------------------------------------------------"
+}
+
+op-sudo-v() {
+  op read "op://Development/LinuxUser/password" | sudo -S -v
+}

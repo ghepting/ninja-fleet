@@ -1,0 +1,4 @@
+- name: Orchestrate Android phones
+  hosts: phone
+  roles:
+    - phone

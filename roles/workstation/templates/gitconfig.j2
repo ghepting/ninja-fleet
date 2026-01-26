@@ -1,0 +1,19 @@
+[user]
+  name = {{ user_full_name }}
+  email = {{ user_email }}
+  signingkey = "{{ git_signing_key }}"
+[push]
+  default = current
+  autoSetupRemote = true
+[pull]
+  rebase = true
+[gpg]
+  format = ssh
+[commit]
+  gpgsign = true
+[init]
+  defaultBranch = main
+[alias]
+  cmp = "!f() { BRANCH=$(git branch --show-current); BASE=${1:-main}; REPO_URL=$(git remote get-url origin | sed \"s/git@github.com:/https:\\/\\/github.com\\//\" | sed \"s/\\.git$//\"); URL=\"$REPO_URL/compare/$BASE...$BRANCH\"; echo \"Opening: $URL\"; open \"$URL\"; }; f"
+[gpg "ssh"]
+  program = git-ssh-sign-wrapper

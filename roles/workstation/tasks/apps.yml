@@ -1,0 +1,51 @@
+- name: apps | Install Homebrew Casks (macOS)
+  when: ansible_facts['os_family'] == 'Darwin'
+  tags: [workstation, apps]
+  community.general.homebrew_cask:
+    name:
+      - iterm2
+      - docker-desktop
+      - antigravity
+      - postman
+      - ngrok
+      - linear-linear
+      - font-jetbrains-mono
+      - 1password
+      - 1password-cli
+      - google-chrome
+      - google-drive
+      - slack
+      - android-platform-tools
+    state: present
+
+- name: apps | Install Homebrew formulae (macOS)
+  when: ansible_facts['os_family'] == 'Darwin'
+  tags: [workstation, apps]
+  community.general.homebrew:
+    name:
+      - mas
+      - gh
+      - duti
+    state: present
+
+- name: apps | Install App Store apps
+  when: ansible_facts['os_family'] == 'Darwin'
+  tags: [workstation, apps]
+  community.general.mas:
+    id:
+      - 413857545 # Divvy
+      - 937984704 # Amphetamine
+      - 603637384 # Name Mangler 3
+      - 1295203466 # Windows App
+    state: present
+
+- name: apps | Install Flatpak apps
+  community.general.flatpak:
+    name:
+      - com.google.Chrome
+      - com.slack.Slack
+      - com.getpostman.Postman
+      - com.valvesoftware.Steam
+    state: present
+  when: ansible_facts['os_family'] != 'Darwin' and ansible_facts['system'] == 'Linux'
+  become: true

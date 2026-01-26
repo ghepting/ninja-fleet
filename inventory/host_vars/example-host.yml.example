@@ -1,0 +1,9 @@
+---
+# Example host-specific variables
+# Copy this file to inventory/host_vars/<hostname>.yml and customize for each host
+
+# Override the admin username for this specific host
+admin_username: admin
+
+# Override the admin group (defaults to admin_username if not specified)
+# admin_group: staff

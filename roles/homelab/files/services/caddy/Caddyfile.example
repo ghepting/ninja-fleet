@@ -1,0 +1,50 @@
+{
+	email user@example.com
+}
+
+(restricted) {
+	@private_only {
+		remote_ip private_ranges
+	}
+	handle @private_only {
+		{args[:]}
+	}
+	handle {
+		abort
+	}
+}
+
+# --- Internal/Private Services ---
+
+dns.example.com {
+	tls /etc/ssl/example_com/wildcard.crt /etc/ssl/example_com/wildcard.key
+	import restricted reverse_proxy 127.0.0.1:5380
+}
+
+status.example.com {
+	tls /etc/ssl/example_com/wildcard.crt /etc/ssl/example_com/wildcard.key
+	import restricted reverse_proxy 127.0.0.1:3001
+}
+
+wg.example.com {
+	tls /etc/ssl/example_com/wildcard.crt /etc/ssl/example_com/wildcard.key
+	import restricted reverse_proxy 127.0.0.1:51821
+}
+
+# --- Public Services ---
+
+plex.example.com {
+	tls /etc/ssl/example_com/wildcard.crt /etc/ssl/example_com/wildcard.key
+	reverse_proxy https://192.168.1.3:32400 {
+		transport http {
+			tls_insecure_skip_verify
+		}
+		header_up Host {upstream_hostport}
+		header_up X-Real-IP {remote_host}
+	}
+}
+
+audio.example.com {
+	tls /etc/ssl/example_com/wildcard.crt /etc/ssl/example_com/wildcard.key
+	reverse_proxy 127.0.0.1:13378
+}

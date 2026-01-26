@@ -1,0 +1,32 @@
+---
+- name: flatpak | Install Flatpak (Fedora)
+  when: ansible_facts['pkg_mgr'] == 'dnf'
+  become: true
+  ansible.builtin.dnf:
+    name: flatpak
+    state: present
+
+- name: flatpak | Install Flatpak (Debian/Ubuntu)
+  when: ansible_facts['pkg_mgr'] == 'apt'
+  become: true
+  ansible.builtin.apt:
+    name: flatpak
+    state: present
+    update_cache: true
+
+- name: flatpak | Install Flatpak (Arch)
+  when: ansible_facts['pkg_mgr'] == 'pacman'
+  become: true
+  community.general.pacman:
+    name: flatpak
+    state: present
+    update_cache: true
+
+- name: flatpak | Install Flatpak remotes
+  when: ansible_facts['os_family'] != 'Darwin' and ansible_facts['system'] == 'Linux'
+  become: true
+  community.general.flatpak_remote:
+    name: flathub
+    state: present
+    flatpakrepo_url: https://flathub.org/repo/flathub.flatpakrepo
+  ignore_errors: "{{ ansible_check_mode }}"

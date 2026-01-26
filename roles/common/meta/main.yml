@@ -1,0 +1,18 @@
+---
+galaxy_info:
+  author: ninja_fleet
+  role_name: common
+  description: Core utilities and base configuration for all fleet nodes.
+  company: Ninja Fleet
+  license: MIT
+  min_ansible_version: "2.12"
+  platforms:
+    - name: Debian
+      versions:
+        - all
+    - name: MacOSX
+      versions:
+        - all
+  galaxy_tags:
+    - system
+dependencies: []

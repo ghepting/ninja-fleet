@@ -1,0 +1,25 @@
+---
+admin_username: user
+ansible_user: "{{ admin_username }}"
+primary_domain: example.com
+user_full_name: User Name
+user_email: user@example.com
+git_signing_key: "key::ssh-ed25519 AAAAC3... (public key)"
+server_hostname: server
+server_vpn_ip: 10.10.10.1
+server_lan_ip: 192.168.1.2
+server_ssh_user: user
+server_lan_subnet: 192.168.1.0/24
+server_network_interface: eth0
+
+# Timezone for Docker containers
+timezone: America/New_York
+
+# WireGuard VPN configuration
+wireguard_host: vpn.example.com
+wireguard_default_address: 10.10.10.x
+wireguard_allowed_ips: 10.10.10.0/24
+
+# Media server configuration (optional)
+audiobooks_mount_path: /mnt/storage/audiobooks
+plex_server_ip: 192.168.1.3

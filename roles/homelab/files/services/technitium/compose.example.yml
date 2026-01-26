@@ -1,0 +1,11 @@
+services:
+  technitium-dns:
+    container_name: technitium-dns
+    image: technitium/dns-server:latest
+    network_mode: "host"
+    environment:
+      - DNS_SERVER_DOMAIN=dns.example.com
+      - TZ=America/New_York
+    volumes:
+      - /opt/homelab/services/technitium/config:/etc/dns:rw
+    restart: unless-stopped

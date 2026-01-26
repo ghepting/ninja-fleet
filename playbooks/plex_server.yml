@@ -1,0 +1,8 @@
+---
+- name: Plex Server Playbook
+  hosts: plex_server
+  vars:
+    ansible_shell_type: powershell
+    ansible_connection: ssh
+  roles:
+    - plex_server

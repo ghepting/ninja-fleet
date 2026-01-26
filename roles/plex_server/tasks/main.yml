@@ -1,0 +1,12 @@
+---
+- name: Plex_server | Setup VPN
+  ansible.builtin.include_tasks: vpn.yml
+  tags: [plex, vpn]
+
+- name: Plex_server | Configure System
+  ansible.builtin.include_tasks: system.yml
+  tags: [plex, system]
+
+- name: Plex_server | Install Apps
+  ansible.builtin.include_tasks: apps.yml
+  tags: [plex, apps]

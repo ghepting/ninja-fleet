@@ -1,0 +1,11 @@
+include:
+  - ./services/caddy/compose.yml
+  - ./services/technitium/compose.yml
+  - ./services/wireguard/compose.yml
+  - ./services/uptime-kuma/compose.yml
+  - ./services/audiobookshelf/compose.yml
+
+networks:
+  homelab:
+    name: homelab
+    driver: bridge

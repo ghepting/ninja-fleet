@@ -1,0 +1,38 @@
+- name: zsh | Deploy .aliases
+  ansible.builtin.template:
+    src: aliases.j2
+    dest: "~/.aliases"
+    mode: "0644"
+  tags: [zsh, shell, dotfiles]
+
+- name: zsh | Source custom files in .zshrc
+  ansible.builtin.blockinfile:
+    path: "~/.zshrc"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK: CUSTOM"
+    block: |
+      source "$HOME/.aliases"
+  tags: [zsh, shell]
+
+- name: zsh | Homebrew shellenv (macOS)
+  ansible.builtin.blockinfile:
+    path: "~/.zshrc"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK: HOMEBREW"
+    insertbefore: BOF
+    block: |
+      if [[ -x "/opt/homebrew/bin/brew" ]]; then
+        eval "$(/opt/homebrew/bin/brew shellenv)"
+      fi
+  when: ansible_facts['os_family'] == 'Darwin'
+  tags: [zsh, shell]
+
+- name: zsh | General Environment Settings
+  ansible.builtin.blockinfile:
+    path: "~/.zshrc"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK: GENERAL"
+    block: |
+      export EDITOR="vim"
+      export PATH="$HOME/.local/bin:$PATH"
+      if [[ -f "$HOME/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock" ]]; then
+        export SSH_AUTH_SOCK="$HOME/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
+      fi
+  tags: [zsh, shell]

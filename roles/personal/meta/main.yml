@@ -1,0 +1,16 @@
+---
+galaxy_info:
+  author: ninja_fleet
+  role_name: personal
+  description: Basic productivity apps and configurations for personal machines.
+  company: Ninja Fleet
+  license: MIT
+  min_ansible_version: "2.12"
+  platforms:
+    - name: MacOSX
+      versions:
+        - all
+  galaxy_tags:
+    - system
+    - macos
+dependencies: []
