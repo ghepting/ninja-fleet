@@ -1,0 +1,48 @@
+---
+- name: vpn | Ensure WireGuard peer is defined
+  ansible.builtin.assert:
+    that: wireguard_peer is defined
+    fail_msg: "Please define wireguard_peer in inventory for this host (e.g., ninjaplex)"
+
+- name: vpn | Find WireGuard peer config directory on server
+  ansible.builtin.find:
+    paths: /opt/homelab/services/wireguard/config
+    file_type: directory
+    patterns: "peer_{{ wireguard_peer }}"
+  delegate_to: ninja-server
+  register: plex_server_wg_peer_config_dir
+  become: true
+  tags: [plex, vpn]
+
+- name: vpn | Find WireGuard config file in peer directory
+  ansible.builtin.find:
+    paths: "{{ plex_server_wg_peer_config_dir.files[0].path }}"
+    patterns: "*.conf"
+  delegate_to: ninja-server
+  register: plex_server_wg_peer_config_exact
+  when: plex_server_wg_peer_config_dir.matched > 0
+  become: true
+  tags: [plex, vpn]
+
+- name: vpn | Read WireGuard config from server
+  ansible.builtin.slurp:
+    src: "{{ plex_server_wg_peer_config_exact.files[0].path }}"
+  delegate_to: ninja-server
+  register: plex_server_wg_config_content
+  when: plex_server_wg_peer_config_dir.matched > 0 and plex_server_wg_peer_config_exact.matched > 0
+  become: true
+  tags: [plex, vpn]
+
+- name: vpn | Ensure WireGuard configuration directory exists
+  ansible.windows.win_file:
+    path: 'C:\Program Files\WireGuard\Data\Configurations'
+    state: directory
+  when: plex_server_wg_config_content.content is defined
+  tags: [plex, vpn]
+
+- name: vpn | Write WireGuard config file
+  ansible.windows.win_copy:
+    content: "{{ plex_server_wg_config_content['content'] | b64decode }}"
+    dest: 'C:\Program Files\WireGuard\Data\Configurations\wg0.conf'
+  when: plex_server_wg_config_content.content is defined
+  tags: [plex, vpn]

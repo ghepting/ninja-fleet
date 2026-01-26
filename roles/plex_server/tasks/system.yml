@@ -1,0 +1,36 @@
+---
+- name: system | Enable Remote Desktop (RDP)
+  ansible.windows.win_regedit:
+    path: 'HKLM:\System\CurrentControlSet\Control\Terminal Server'
+    name: fDenyTSConnections
+    data: 0
+    type: dword
+    state: present
+  tags: [plex, system, rdp]
+
+- name: system | Allow RDP through firewall
+  community.windows.win_firewall_rule:
+    name: "Remote Desktop"
+    group: "Remote Desktop"
+    enabled: true
+    state: present
+  tags: [plex, system, rdp]
+
+- name: system | Ensure RDP service is running
+  ansible.windows.win_service:
+    name: TermService
+    start_mode: auto
+    state: started
+  tags: [plex, system, rdp]
+
+- name: system | Allow Plex Media Server TCP / 32400
+  community.windows.win_firewall_rule:
+    name: "Plex Media Server"
+    localport: 32400
+    action: allow
+    direction: in
+    protocol: tcp
+    profiles: [private, public, domain]
+    state: present
+    enabled: true
+  tags: [plex, system, firewall]

@@ -1,0 +1,18 @@
+---
+galaxy_info:
+  author: ninja_fleet
+  role_name: plex_server
+  description: Windows 11 media server configurations (Plex, etc.).
+  company: Ninja Fleet
+  license: MIT
+  min_ansible_version: "2.12"
+  platforms:
+    - name: Windows
+      versions:
+        - all
+  galaxy_tags:
+    - system
+    - windows
+    - media
+    - plex
+dependencies: []
