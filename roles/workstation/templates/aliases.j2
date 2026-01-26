@@ -19,8 +19,8 @@ if [[ "$OSTYPE" == "linux-gnu"* ]]; then
 fi
 
 # ninja-server
-alias ninja='ssh -A {{ ansible_user }}@{{ server_vpn_ip }}'
-alias ninjastats='ssh -A -T {{ ansible_user }}@{{ server_vpn_ip }} "docker stats"'
+alias ninja='ssh -A {{ server_ssh_user }}@{{ server_vpn_ip }}'
+alias ninjastats='ssh -A -T {{ server_ssh_user }}@{{ server_vpn_ip }} "docker stats"'
 alias caddyreload='docker exec -w /etc/caddy caddy caddy reload'
 alias caddyfmt='docker exec -w /etc/caddy caddy caddy fmt --overwrite'
 alias rclonestatus='sudo systemctl status rclone-gdrive.service'
