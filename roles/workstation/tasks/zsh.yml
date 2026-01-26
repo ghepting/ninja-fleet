@@ -1,3 +1,26 @@
+- name: zsh | Deploy .aliases
+  ansible.builtin.template:
+    src: aliases.j2
+    dest: "~/.aliases"
+    mode: "0644"
+  tags: [zsh, shell, dotfiles]
+
+- name: zsh | Deploy .zsh_custom
+  ansible.builtin.template:
+    src: zsh_custom.j2
+    dest: "~/.zsh_custom"
+    mode: "0644"
+  tags: [zsh, shell, dotfiles]
+
+- name: zsh | Source custom files in .zshrc
+  ansible.builtin.blockinfile:
+    path: "~/.zshrc"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK: CUSTOM"
+    block: |
+      source "$HOME/.aliases"
+      source "$HOME/.zsh_custom"
+  tags: [zsh, shell]
+
 - name: zsh | Homebrew shellenv (macOS)
   ansible.builtin.blockinfile:
     path: "~/.zshrc"

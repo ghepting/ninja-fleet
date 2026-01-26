@@ -1,0 +1,78 @@
+- name: file_associations | Check if Antigravity is installed (macOS App)
+  ansible.builtin.stat:
+    path: /Applications/Antigravity.app
+  register: workstation_antigravity_app_installed
+  when: ansible_facts['os_family'] == 'Darwin'
+
+- name: file_associations | Check if Antigravity is installed (macOS Binary)
+  ansible.builtin.stat:
+    path: /usr/local/bin/antigravity
+  register: workstation_antigravity_installed
+  when: ansible_facts['os_family'] == 'Darwin'
+
+- name: file_associations | Configure Antigravity default associations (macOS)
+  ansible.builtin.shell:
+    cmd: "duti -s com.google.Antigravity {{ item }} all"
+    executable: /bin/zsh
+  loop:
+    - public.json
+    - public.plain-text
+    - public.python-script
+    - public.shell-script
+    - public.source-code
+    - public.text
+    - public.unix-executable
+    - .c
+    - .cpp
+    - .cs
+    - .css
+    - .go
+    - .java
+    - .js
+    - .jsx
+    - .json
+    - .md
+    - .py
+    - .rb
+    - .ts
+    - .tsx
+    - .txt
+    - .yaml
+    - .yml
+    - .toml
+    - .env
+    - .zshrc
+    - .gitignore
+    - .gitconfig
+    - .dockerfile
+    - .sh
+    - .rs
+  when:
+    - ansible_facts['os_family'] == 'Darwin'
+    - workstation_antigravity_installed.stat.exists or workstation_antigravity_app_installed.stat.exists
+  changed_when: false
+  tags: [apps, associations]
+
+- name: file_associations | Check if Antigravity is installed (Linux)
+  ansible.builtin.command: which antigravity
+  register: workstation_antigravity_linux_installed
+  failed_when: false
+  changed_when: false
+  when: ansible_facts['system'] == 'Linux'
+
+- name: file_associations | Configure Antigravity default associations (Linux)
+  ansible.builtin.command:
+    cmd: "xdg-mime default antigravity.desktop {{ item }}"
+  loop:
+    - text/plain
+    - text/x-python
+    - text/x-ruby
+    - text/x-javascript
+    - text/x-shellscript
+    - application/json
+    - text/markdown
+  when:
+    - ansible_facts['system'] == 'Linux'
+    - workstation_antigravity_linux_installed.rc == 0
+  changed_when: false
+  tags: [apps, associations]

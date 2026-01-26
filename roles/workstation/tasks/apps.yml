@@ -18,11 +18,14 @@
       - android-platform-tools
     state: present
 
-- name: apps | Install mas via Homebrew
+- name: apps | Install Homebrew formulae (macOS)
   when: ansible_facts['os_family'] == 'Darwin'
   tags: [workstation, apps]
   community.general.homebrew:
-    name: mas
+    name:
+      - mas
+      - gh
+      - duti
     state: present
 
 - name: apps | Install App Store apps

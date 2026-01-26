@@ -1,0 +1,53 @@
+- name: vim_tmux | Ensure .vim/bundle directory exists
+  ansible.builtin.file:
+    path: "~/.vim/bundle"
+    state: directory
+    mode: "0755"
+
+- name: vim_tmux | Install Vundle
+  ansible.builtin.git:
+    repo: https://github.com/VundleVim/Vundle.vim.git
+    dest: "~/.vim/bundle/Vundle.vim"
+    version: master
+  become: false
+
+- name: vim_tmux | Deploy Vim templates
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "~/{{ item.dest }}"
+    mode: "0644"
+  loop:
+    - { src: "vimrc.j2", dest: ".vimrc" }
+    - { src: "vimrc.bundles.j2", dest: ".vimrc.bundles" }
+  tags: [vim, dotfiles]
+
+- name: vim_tmux | Deploy Tmux template
+  ansible.builtin.template:
+    src: tmux.conf.j2
+    dest: ~/.tmux.conf
+    mode: "0644"
+  tags: [tmux, dotfiles]
+
+- name: vim_tmux | Deploy local dotfiles if they exist in source
+  ansible.builtin.copy:
+    src: "{{ item.src }}"
+    dest: "~/{{ item.dest }}"
+    mode: "0644"
+  loop:
+    - src: "/Users/gary/Development/dotfiles/.vimrc.local"
+      dest: ".vimrc.local"
+    - src: "/Users/gary/Development/dotfiles/.vimrc.bundles.local"
+      dest: ".vimrc.bundles.local"
+    - src: "/Users/gary/Development/dotfiles/.tmux.conf.local"
+      dest: ".tmux.conf.local"
+  failed_when: false # In case some are missing
+  tags: [vim, tmux, dotfiles]
+
+- name: vim_tmux | Install Vim plugins via Vundle
+  ansible.builtin.shell:
+    cmd: vim +PluginInstall +qall
+    executable: /bin/zsh
+  register: workstation_vim_plugin_install
+  failed_when: false # Vim often returns non-zero even on success when running blindly
+  changed_when: "'Installed' in workstation_vim_plugin_install.stdout"
+  tags: [vim, dotfiles]

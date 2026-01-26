@@ -1,0 +1,89 @@
+# ensure sudo (and other) commands expand custom aliases args (POSIX shell spec for next-word expansion)
+alias sudo='sudo '
+alias watch='watch '
+alias direnv='direnv '
+
+# ensure tmux uses direnv
+alias tmux='direnv exec / tmux'
+
+# normalize v/vi/vim
+alias v='vim'
+alias vi='vim'
+
+# bundler
+alias be='bundle exec'
+
+# chrome GPU conf on fedora (ninja-vengeance)
+if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+  alias chrome='NVD_BACKEND=direct google-chrome --enable-features=VaapiVideoDecoder,VaapiIgnoreDriverChecks,VaapiOnNvidiaGPUs --disable-features=UseChromeOSDirectVideoDecoder --ignore-gpu-blocklist --ozone-platform=wayland'
+fi
+
+# ninja-server
+alias ninja='ssh -A ghepting@10.13.13.1'
+alias ninjastats='ssh -A -T ghepting@10.13.13.1 "docker stats"'
+alias caddyreload='docker exec -w /etc/caddy caddy caddy reload'
+alias caddyfmt='docker exec -w /etc/caddy caddy caddy fmt --overwrite'
+alias rclonestatus='sudo systemctl status rclone-gdrive.service'
+alias rclonereload='sudo systemctl daemon-reload && sudo systemctl restart rclone-gdrive.service'
+
+# VPN management on ninja-vengeance
+alias vpnup='nmcli connection up ninja-vengeance'
+alias vpndown='nmcli connection down ninja-vengeance'
+alias vpnstatus='sudo wg show'
+# ninja-vengeance (fedora) shinanigens
+alias fixethernet='sudo modprobe -r igc && sudo modprobe igc && sudo systemctl restart NetworkManager'
+
+
+# docker
+alias dps='docker ps -a --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"'
+
+# rails/rake
+alias rs='bundle exec rails s'
+alias rc='bundle exec rails c'
+alias rr='bundle exec rails r'
+alias ss='bundle exec sidekiq -q low -q default -q high'
+
+# rubocop
+alias cop='bundle exec rubocop'
+alias pig='bundle exec rubocop --auto-correct'
+
+# grep
+alias grep='grep --color=always'
+
+# list
+alias l='ls -alF'
+
+# cd
+alias cda='cd ~/Development/apps'
+alias cdsdk='cd ~/Development/ui-extensions-sdk'
+
+# git
+alias ga='git add'
+alias gap='git add -p'
+alias gb='git branch'
+alias gbn='git symbolic-ref --quiet --short HEAD'
+alias gbm="git remote show origin | sed -n '/HEAD branch/s/.*: //p'"
+alias gca='git commit --amend'
+alias gcan='git commit --amend --no-edit'
+alias gd='git diff'
+alias gds='git diff --stat'
+alias gdc='git diff --cached'
+alias gfp='git fetch && git pull'
+alias gg='git grep'
+alias gl='git log --decorate'
+alias glb='git log main..HEAD --oneline'
+alias gl1='git log --oneline'
+alias gld='git log --decorate --all --oneline --graph'
+alias glf='git ls-files'
+alias glg="git log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %aN: %s %Cgreen(%cr)%Creset' --abbrev-commit --date=relative"
+alias gln='git log -n'
+alias glp='git log -p'
+alias glpn='git log -p -n'
+alias gs='git status'
+alias gsw="watch --color 'git log main..HEAD --oneline && git -c color.status=always status --short -b'"
+alias gprune='git remote prune origin'
+alias gclean='git clean -fxd -e config/ node_modules/ tmp/'
+alias grp='git rev-parse head'
+
+# custom for ninja-fleet
+alias nf='cd ~/Development/ninja-fleet'

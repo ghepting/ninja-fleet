@@ -2,6 +2,10 @@
   ansible.builtin.include_tasks: zsh.yml
   tags: [zsh, shell]
 
+- name: Setup Vim and Tmux
+  ansible.builtin.include_tasks: vim_tmux.yml
+  tags: [vim, tmux, dotfiles]
+
 - name: Install python/pyenv
   ansible.builtin.include_tasks: python.yml
   tags: [python, pyenv, shell]
@@ -25,6 +29,18 @@
 - name: Install apps
   ansible.builtin.include_tasks: apps.yml
   tags: [apps]
+
+- name: Install AI tools
+  ansible.builtin.include_tasks: ai_tools.yml
+  tags: [ai, claude, gemini]
+
+- name: Setup File Associations
+  ansible.builtin.include_tasks: file_associations.yml
+  tags: [apps, associations]
+
+- name: Setup iTerm2 Colors
+  ansible.builtin.include_tasks: iterm.yml
+  tags: [iterm, colors]
 
 - name: Setup VPN
   ansible.builtin.include_tasks: vpn.yml
