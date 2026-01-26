@@ -13,3 +13,10 @@
   when: ansible_facts['os_family'] == 'Darwin'
   become: true
   changed_when: true
+
+- name: Load LaunchAgent
+  ansible.builtin.command:
+    cmd: "launchctl load ~/Library/LaunchAgents/com.user.login.remap_capslock.plist"
+  when: ansible_facts['os_family'] == 'Darwin'
+  changed_when: true
+  failed_when: false

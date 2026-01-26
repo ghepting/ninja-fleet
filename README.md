@@ -21,6 +21,7 @@ It represents an evolution from ad-hoc "search and destroy" maintenance to an im
 - **Surgical VPN**: Integrated WireGuard orchestration for secure remote access across all devices.
 - **Mobile Check-ins**: Basic Android management including app verification and VPN health checks.
 - **Production Standards**: Enforced idempotency, strict linting, and Molecule-tested core roles.
+- **Automated Releases**: Standardized via Conventional Commits and Release Please.
 
 ## 📐 Architecture
 

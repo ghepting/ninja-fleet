@@ -1,0 +1,54 @@
+- name: keyboard | MacOS CapsLock to Ctrl
+  tags: [workstation, keyboard, macos]
+  when: ansible_facts['os_family'] == 'Darwin'
+  block:
+    - name: keyboard | Create LaunchAgents directory
+      ansible.builtin.file:
+        path: "~/Library/LaunchAgents"
+        state: directory
+        mode: "0755"
+
+    - name: keyboard | Deploy LaunchAgent for key remapping
+      ansible.builtin.template:
+        src: com.user.login.remap_capslock.plist.j2
+        dest: "~/Library/LaunchAgents/com.user.login.remap_capslock.plist"
+        mode: "0644"
+      register: workstation_launchagent_result
+      notify: "Load LaunchAgent"
+
+- name: keyboard | Linux GNOME CapsLock to Ctrl
+  tags: [workstation, keyboard, gnome]
+  community.general.dconf:
+    key: "/org/gnome/desktop/input-sources/xkb-options"
+    value: "['caps:ctrl_modifier']"
+    state: present
+  when:
+    - ansible_facts['os_family'] != 'Darwin'
+    - ansible_facts['system'] == 'Linux'
+    - "'GNOME' in (ansible_facts['user_shell'] | default('')) or 'gnome' in (lookup('env', 'XDG_CURRENT_DESKTOP') | lower)"
+
+- name: keyboard | Linux KDE CapsLock to Ctrl
+  tags: [workstation, keyboard, kde]
+  community.general.ini_file:
+    path: "~/.config/kxkbrc"
+    section: Layout
+    option: Options
+    value: caps:ctrl_modifier
+    mode: "0644"
+    create: true
+  when:
+    - ansible_facts['os_family'] != 'Darwin'
+    - ansible_facts['system'] == 'Linux'
+    - "'KDE' in (lookup('env', 'XDG_CURRENT_DESKTOP') | default(''))"
+
+- name: keyboard | Linux Generic (X11) CapsLock to Ctrl
+  tags: [workstation, keyboard, generic]
+  ansible.builtin.lineinfile:
+    path: "~/.xinitrc"
+    line: "setxkbmap -option caps:ctrl_modifier"
+    create: true
+    mode: "0644"
+  when:
+    - ansible_facts['os_family'] != 'Darwin'
+    - ansible_facts['system'] == 'Linux'
+    - lookup('env', 'DISPLAY') != ""
