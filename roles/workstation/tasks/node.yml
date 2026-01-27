@@ -20,7 +20,7 @@
     cmd: |
       source ~/.nvm/nvm.sh
       nvm install --lts
-      nvm alias default lts/*
+      nvm alias default "lts/*"
     executable: /bin/zsh
   args:
     creates: "~/.nvm/alias/default"

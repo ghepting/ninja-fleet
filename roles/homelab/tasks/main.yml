@@ -134,3 +134,21 @@
     state: present
   become: true
   tags: [homelab, docker, deploy, caddy, vpn, dns]
+
+- name: Homelab | Ensure wg-easy database uses split-DNS search suffix
+  ansible.builtin.replace:
+    path: "{{ project_path }}/services/wireguard/wg-easy/data/db.json"
+    regexp: '"dns": "10.13.13.1"'
+    replace: '"dns": "10.13.13.1, lan"'
+  become: true
+  notify: Restart wg-easy
+  tags: [homelab, vpn, config]
+
+- name: Homelab | Update the main wg0.conf for the server
+  ansible.builtin.replace:
+    path: "{{ project_path }}/services/wireguard/wg-easy/data/wg0.conf"
+    regexp: "DNS = 10.13.13.1$"
+    replace: "DNS = 10.13.13.1, lan"
+  become: true
+  notify: Restart wg-easy
+  tags: [homelab, vpn, config]
