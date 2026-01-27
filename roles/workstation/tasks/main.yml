@@ -45,3 +45,7 @@
 - name: Setup VPN
   ansible.builtin.include_tasks: vpn.yml
   tags: [vpn]
+
+- name: Setup Keyboard Remapping
+  ansible.builtin.include_tasks: keyboard.yml
+  tags: [keyboard, workstation]

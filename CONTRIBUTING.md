@@ -9,7 +9,14 @@ Thank you for your interest in contributing to the Ninja Fleet infrastructure!
    - Fork the repository.
    - Create a descriptive branch (e.g., `feature/new-role` or `fix/typo`).
    - Ensure your changes follow the existing project structure.
-   - Run `ansible-lint` to verify code quality.
+   - **Conventional Commits**: Use [Conventional Commits](https://www.conventionalcommits.org/) for all commit messages (e.g., `feat: add keyboard remapping`).
+   - **Pre-commit**: Install pre-commit hooks before committing:
+
+     ```bash
+     pip install -r requirements-dev.txt
+     pre-commit install --install-hooks -t pre-commit -t commit-msg
+     ```
+
    - Submit a pull request to the `main` branch.
 
 ## Code Standards

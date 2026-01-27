@@ -77,12 +77,18 @@ fi
 # 4. Homelab Compose Files
 sync_item "$SOURCE_DIR/compose.yml" "roles/homelab/files/compose.yml"
 
-# 5. Service-specific Compose Files
+# 5. Service-specific Files (Compose, Caddyfile, .env, etc.)
 if [ -d "$SOURCE_DIR/services" ]; then
     for service_dir in "$SOURCE_DIR/services"/*; do
         if [ -d "$service_dir" ]; then
             service_name=$(basename "$service_dir")
-            sync_item "$service_dir/compose.yml" "roles/homelab/files/services/$service_name/compose.yml"
+            mkdir -p "roles/homelab/files/services/$service_name"
+            for config_file in "$service_dir"/*; do
+                if [ -f "$config_file" ]; then
+                    file_name=$(basename "$config_file")
+                    sync_item "$config_file" "roles/homelab/files/services/$service_name/$file_name"
+                fi
+            done
         fi
     done
 fi

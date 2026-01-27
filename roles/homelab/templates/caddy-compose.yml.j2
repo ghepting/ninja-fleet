@@ -1,0 +1,13 @@
+services:
+  caddy:
+    image: caddy:latest
+    container_name: caddy
+    network_mode: host
+    restart: unless-stopped
+    volumes:
+      - {{ project_path }}/services/caddy/Caddyfile:/etc/caddy/Caddyfile
+      - {{ project_path }}/services/caddy/data:/data
+      - {{ project_path }}/services/caddy/config:/config
+      - /etc/ssl:/etc/ssl:ro
+    environment:
+      - HOME=/data

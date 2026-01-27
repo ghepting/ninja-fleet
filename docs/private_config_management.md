@@ -58,7 +58,7 @@ cd ninja-fleet
 - **Global Variables**: `main.yml` and `secrets.yml`
 - **Vault Script**: `vault_1password.sh`
 - **SSL Certificates**: All files in `certs/`
-- **Docker Compose**: Main `compose.yml` and service-specific overrides.
+- **Docker Compose**: Main `compose.yml` and all files in service-specific directories (Caddyfile, .env, etc.).
 
 ## Multi-Machine Workflow
 

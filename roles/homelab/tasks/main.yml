@@ -53,53 +53,49 @@
   become: true
   tags: [homelab, docker, config]
 
-- name: Homelab | Deploy WireGuard compose file
-  ansible.builtin.template:
-    src: wireguard-compose.yml.j2
-    dest: "{{ project_path }}/services/wireguard/compose.yml"
-    mode: "0644"
-    owner: "{{ admin_username }}"
-    group: "{{ admin_group | default(admin_username) }}"
-  become: true
-  tags: [homelab, docker, config, vpn]
+# --- Logic: Overlays take precedence over Templates ---
 
-- name: Homelab | Deploy Technitium compose file
-  ansible.builtin.template:
-    src: technitium-compose.yml.j2
-    dest: "{{ project_path }}/services/technitium/compose.yml"
-    mode: "0644"
-    owner: "{{ admin_username }}"
-    group: "{{ admin_group | default(admin_username) }}"
-  become: true
-  tags: [homelab, docker, config, dns]
+- name: Homelab | Check for private service overlays
+  ansible.builtin.stat:
+    path: "{{ role_path }}/files/services/{{ item.service }}/{{ item.file }}"
+  delegate_to: localhost
+  register: homelab_service_overlays
+  loop:
+    - { service: "wireguard", file: "compose.yml" }
+    - { service: "wireguard", file: ".env.wireguard" }
+    - { service: "caddy", file: "compose.yml" }
+    - { service: "caddy", file: "Caddyfile" }
+    - { service: "technitium", file: "compose.yml" }
+    - { service: "audiobookshelf", file: "compose.yml" }
+  tags: [homelab, config, caddy, vpn, dns]
 
-- name: Homelab | Deploy Audiobookshelf compose file
+- name: Homelab | Deploy service templates (if no overlay exists)
   ansible.builtin.template:
-    src: audiobookshelf-compose.yml.j2
-    dest: "{{ project_path }}/services/audiobookshelf/compose.yml"
+    src: >-
+      {{ (item.item.service + '-compose.yml.j2')
+      if item.item.file == 'compose.yml' else
+      ('wireguard.env.j2' if item.item.file == '.env.wireguard'
+      else item.item.file + '.j2') }}
+    dest: "{{ project_path }}/services/{{ item.item.service }}/{{ item.item.file }}"
     mode: "0644"
-    owner: "{{ admin_username }}"
-    group: "{{ admin_group | default(admin_username) }}"
+    owner: "{{ 'root' if item.item.service == 'caddy' else admin_username }}"
+  when: not item.stat.exists
+  loop: "{{ homelab_service_overlays.results }}"
+  notify: Reload Caddy
   become: true
-  tags: [homelab, docker, config]
+  tags: [homelab, config, caddy, vpn, dns]
 
-- name: Homelab | Deploy services compose files
+- name: Homelab | Deploy service overlays (private configs)
   ansible.builtin.copy:
-    src: services/
-    dest: "{{ project_path }}/services/"
+    src: "services/{{ item.item.service }}/{{ item.item.file }}"
+    dest: "{{ project_path }}/services/{{ item.item.service }}/{{ item.item.file }}"
     mode: "0644"
-    owner: "{{ admin_username }}"
-    group: "{{ admin_group | default(admin_username) }}"
+    owner: "{{ 'root' if item.item.service == 'caddy' else admin_username }}"
+  when: item.stat.exists
+  loop: "{{ homelab_service_overlays.results }}"
+  notify: Reload Caddy
   become: true
-  tags: [homelab, docker, config]
-
-- name: Homelab | Deploy Wireguard Environment File
-  ansible.builtin.template:
-    src: wireguard.env.j2
-    dest: "{{ project_path }}/services/wireguard/.env.wireguard"
-    mode: "0600"
-  become: true
-  tags: [homelab, vpn, config]
+  tags: [homelab, config, caddy, vpn, dns]
 
 - name: Homelab | Ensure SSL directory exists
   ansible.builtin.file:
@@ -122,24 +118,13 @@
   notify: Reload Caddy
   tags: [homelab, caddy, ssl]
 
-- name: Homelab | Deploy Caddyfile
-  ansible.builtin.template:
-    src: Caddyfile.j2
-    dest: "{{ project_path }}/services/caddy/Caddyfile"
-    mode: "0644"
-    owner: root
-    group: root
-  become: true
-  notify: Reload Caddy
-  tags: [homelab, caddy]
-
 - name: Homelab | Ensure the homelab network exists
   community.docker.docker_network:
     name: homelab
     state: present
     driver: bridge
   become: true
-  tags: [homelab, docker, network]
+  tags: [homelab, docker, network, caddy]
 
 - name: Homelab | Deploy Homelab Stack via Docker Compose
   community.docker.docker_compose_v2:
@@ -148,4 +133,4 @@
       - compose.yml
     state: present
   become: true
-  tags: [homelab, docker, deploy]
+  tags: [homelab, docker, deploy, caddy, vpn, dns]
