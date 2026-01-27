@@ -6,8 +6,8 @@ services:
       - 13378:80
     volumes:
       - "{{ audiobooks_mount_path | default('/mnt/storage/audiobooks') }}:/audiobooks"
-      - /opt/homelab/services/audiobookshelf/config:/config
-      - /opt/homelab/services/audiobookshelf/metadata:/metadata
+      - "{{ project_path }}/services/audiobookshelf/config:/config"
+      - "{{ project_path }}/services/audiobookshelf/metadata:/metadata"
     environment:
       - TZ={{ timezone | default('America/New_York') }}
       - PUID=1000

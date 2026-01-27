@@ -10,4 +10,3 @@ homelab_services:
   - uptime-kuma
   # - plex
   - audiobookshelf
-  - romm

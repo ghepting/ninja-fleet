@@ -36,7 +36,7 @@
 
 - name: vpn | Find WireGuard peer config directory on server
   ansible.builtin.find:
-    paths: /opt/homelab/services/wireguard/config
+    paths: "{{ project_path }}/services/wireguard/config"
     file_type: directory
     patterns: "peer_{{ wireguard_peer }}"
   delegate_to: ninja-server
