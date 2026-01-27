@@ -32,6 +32,37 @@ Organize your private storage as follows to maintain compatibility with the sync
         └── compose.yml
 ```
 
+### Symlink Overlay Mapping
+
+The following diagram shows how these private files are mapped into the public `ninja-fleet` directory after running `./link-config.sh`:
+
+```text
+ninja-fleet/
+├── inventory/
+│   ├── hosts.ini ───────────────> ~/.config/ninja-fleet/hosts.ini [IGNORED]
+│   └── group_vars/
+│       └── all/
+│           ├── main.yml ────────> ~/.config/ninja-fleet/main.yml [IGNORED]
+│           └── secrets.yml ─────> ~/.config/ninja-fleet/secrets.yml [IGNORED]
+├── roles/
+│   └── homelab/
+│       └── files/
+│           ├── certs/
+│           │   ├── your-domain.crt ──> ~/.config/ninja-fleet/certs/your-domain.crt [IGNORED]
+│           │   └── your-domain.key ──> ~/.config/ninja-fleet/certs/your-domain.key [IGNORED]
+│           ├── compose.yml ───────────> ~/.config/ninja-fleet/compose.yml [IGNORED]
+│           └── services/
+│               ├── <service-name>/
+│               │   └── compose.yml ───> ~/.config/ninja-fleet/services/<service-name>/compose.yml [IGNORED]
+│               └── caddy/
+│                   ├── Caddyfile ─────> ~/.config/ninja-fleet/services/caddy/Caddyfile [IGNORED]
+│                   └── compose.yml ───> ~/.config/ninja-fleet/services/caddy/compose.yml [IGNORED]
+├── vault_1password.sh ──────────> ~/.config/ninja-fleet/vault_1password.sh [IGNORED]
+├── link-config.sh
+├── export-config.sh
+└── site.yml
+```
+
 ## Automating the Migration: `export-config.sh`
 
 If you currently have your configuration files inside the `ninja-fleet` repository (but they are gitignored), you can quickly move them to the default private storage location using:
