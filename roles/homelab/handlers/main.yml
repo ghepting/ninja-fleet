@@ -3,3 +3,9 @@
     name: caddy
     state: started
     restart: true
+
+- name: Restart wg-easy
+  community.docker.docker_container:
+    name: wg-easy
+    state: started
+    restart: true
