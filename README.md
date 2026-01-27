@@ -1,6 +1,6 @@
 # 🦅 Ninja Fleet - Unified Orchestration
 
-![CI](https://github.com/ghepting/ninja-fleet/actions/workflows/ci.yml/badge.svg)
+[![CI](https://github.com/ghepting/ninja-fleet/actions/workflows/ci.yml/badge.svg)](https://github.com/ghepting/ninja-fleet/actions/workflows/ci.yml)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Ansible](https://img.shields.io/badge/ansible-%3E%3D2.10-D30C55?logo=ansible)
 [![GitHub](https://img.shields.io/badge/github-%23121011.svg?logo=github&logoColor=white)](https://github.com/ghepting/ninja-fleet)
