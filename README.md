@@ -1,6 +1,6 @@
 # 🦅 Ninja Fleet - Unified Orchestration
 
-![CI](https://github.com/ghepting/ninja-fleet/actions/workflows/ci.yml/badge.svg)
+[![CI](https://github.com/ghepting/ninja-fleet/actions/workflows/ci.yml/badge.svg)](https://github.com/ghepting/ninja-fleet/actions/workflows/ci.yml)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Ansible](https://img.shields.io/badge/ansible-%3E%3D2.10-D30C55?logo=ansible)
 [![GitHub](https://img.shields.io/badge/github-%23121011.svg?logo=github&logoColor=white)](https://github.com/ghepting/ninja-fleet)
@@ -138,20 +138,41 @@ If you manage multiple machines or want to keep your private data in a separate 
    ./link-config.sh
    ```
 
-4. Create a private folder or repository (default: `~/.config/ninja-fleet`).
-5. Run the export script to move your current local configs to this location:
+4. This will create symlinks from your private storage into the project, ready for execution.
 
-   ```bash
-   ./export-config.sh
-   ```
+### Private Config Symlink Mapping
 
-6. In the future, or on other machines, run the link script to "overlay" your private data:
+The following diagram shows how your private files in `~/.config/ninja-fleet` are mapped into the `ninja-fleet` directory:
 
-   ```bash
-   ./link-config.sh
-   ```
+```text
+ninja-fleet/
+├── inventory/
+│   ├── hosts.ini ───────────────> ~/.config/ninja-fleet/hosts.ini [IGNORED]
+│   └── group_vars/
+│       └── all/
+│           ├── main.yml ────────> ~/.config/ninja-fleet/main.yml [IGNORED]
+│           └── secrets.yml ─────> ~/.config/ninja-fleet/secrets.yml [IGNORED]
+├── roles/
+│   └── homelab/
+│       └── files/
+│           ├── certs/
+│           │   ├── your-domain.crt ──> ~/.config/ninja-fleet/certs/your-domain.crt [IGNORED]
+│           │   └── your-domain.key ──> ~/.config/ninja-fleet/certs/your-domain.key [IGNORED]
+│           ├── compose.yml ───────────> ~/.config/ninja-fleet/compose.yml [IGNORED]
+│           └── services/
+│               ├── <service-name>/
+│               │   └── compose.yml ───> ~/.config/ninja-fleet/services/<service-name>/compose.yml [IGNORED]
+│               └── caddy/
+│                   ├── Caddyfile ─────> ~/.config/ninja-fleet/services/caddy/Caddyfile [IGNORED]
+│                   └── compose.yml ───> ~/.config/ninja-fleet/services/caddy/compose.yml [IGNORED]
+├── vault_1password.sh ──────────> ~/.config/ninja-fleet/vault_1password.sh [IGNORED]
+├── link-config.sh
+├── export-config.sh
+└── site.yml
+```
 
-7. This will copy your files into the correct gitignored locations, ready for execution.
+> [!TIP]
+> This "Overlay" strategy allows you to keep the `ninja-fleet` repository public while keeping your sensitive host and environment configuration strictly private and separately managed.
 
 ### Prerequisites
 
