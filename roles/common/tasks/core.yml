@@ -50,6 +50,76 @@
       - direnv
     state: present
 
+- name: core | Check for pacman lock (Arch)
+  ansible.builtin.stat:
+    path: /var/lib/pacman/db.lck
+  register: common_pacman_lock
+  when: ansible_facts['pkg_mgr'] == 'pacman'
+  tags: [common, core, pacman]
+
+- name: core | Fail if pacman is locked (Arch)
+  ansible.builtin.fail:
+    msg: >-
+      Pacman is currently locked by another process. Please wait for it to
+      finish or remove /var/lib/pacman/db.lck if you are sure no other
+      instance is running.
+  when:
+    - ansible_facts['pkg_mgr'] == 'pacman'
+    - common_pacman_lock.stat.exists
+  tags: [common, core, pacman]
+
+- name: core | Refresh Arch mirrorlist
+  ansible.builtin.get_url:
+    url: "https://archlinux.org/mirrorlist/?country=US&protocol=https&ip_version=4&use_mirror_status=on"
+    dest: /etc/arch-mirrorlist
+    mode: "0644"
+  become: true
+  when: ansible_facts['pkg_mgr'] == 'pacman'
+  register: common_arch_mirrorlist
+  tags: [common, core, pacman]
+
+- name: core | Uncomment US mirrors
+  ansible.builtin.replace:
+    path: /etc/arch-mirrorlist
+    regexp: "^#(Server = .*)"
+    replace: '\1'
+  become: true
+  when:
+    - ansible_facts['pkg_mgr'] == 'pacman'
+    - common_arch_mirrorlist is changed
+  tags: [common, core, pacman]
+
+- name: core | Update pacman mirrorlist
+  ansible.builtin.copy:
+    src: /etc/arch-mirrorlist
+    dest: /etc/pacman.d/mirrorlist
+    remote_src: true
+    mode: "0644"
+    owner: root
+    group: root
+  become: true
+  when:
+    - ansible_facts['pkg_mgr'] == 'pacman'
+    - common_arch_mirrorlist is changed
+  tags: [common, core, pacman]
+
+- name: core | Initialize and populate Arch keyring
+  ansible.builtin.shell:
+    cmd: "pacman-key --init && pacman-key --populate archlinux"
+  become: true
+  when: ansible_facts['pkg_mgr'] == 'pacman'
+  changed_when: true
+  tags: [common, core, pacman]
+
+- name: core | Update Arch package keyring first
+  community.general.pacman:
+    name: archlinux-keyring
+    state: latest
+    update_cache: true
+  become: true
+  when: ansible_facts['pkg_mgr'] == 'pacman'
+  tags: [common, core, pacman]
+
 - name: core | Install core utilities (Arch)
   when: ansible_facts['pkg_mgr'] == 'pacman'
   become: true
@@ -65,6 +135,9 @@
       - direnv
     state: present
     update_cache: true
+  async: 600
+  poll: 10
+  tags: [common, core, pacman]
 
 - name: core | Set ZSH as default shell
   ansible.builtin.user:

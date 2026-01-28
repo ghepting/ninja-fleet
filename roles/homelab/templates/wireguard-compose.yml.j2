@@ -15,7 +15,7 @@ services:
       - PORT=51821
       - WG_PORT=51820
     volumes:
-      - /opt/homelab/services/wireguard/wg-easy/data:/etc/wireguard
+      - "{{ project_path }}/services/wireguard/wg-easy/data:/etc/wireguard"
     cap_add:
       - NET_ADMIN
       - SYS_MODULE

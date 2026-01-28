@@ -40,7 +40,6 @@
     - technitium
     - uptime-kuma
     - audiobookshelf
-    - romm
   tags: [homelab, config]
 
 - name: Homelab | Deploy main compose.yml
@@ -66,6 +65,7 @@
     - { service: "caddy", file: "compose.yml" }
     - { service: "caddy", file: "Caddyfile" }
     - { service: "technitium", file: "compose.yml" }
+    - { service: "uptime-kuma", file: "compose.yml" }
     - { service: "audiobookshelf", file: "compose.yml" }
   tags: [homelab, config, caddy, vpn, dns]
 
@@ -137,7 +137,7 @@
 
 - name: Homelab | Ensure wg-easy database uses split-DNS search suffix
   ansible.builtin.replace:
-    path: "{{ project_path }}/services/wireguard/wg-easy/data/db.json"
+    path: "{{ project_path }}/services/wireguard/wg-easy/data/wg0.json"
     regexp: '"dns": "10.13.13.1"'
     replace: '"dns": "10.13.13.1, lan"'
   become: true
