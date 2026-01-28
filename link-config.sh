@@ -1,12 +1,12 @@
 #!/bin/bash
 # link-config.sh
 # Use this script to link your private configuration files from a secure location
-# into the ninja-fleet directory.
+# into the ninja-fleet.conf directory.
 
 set -e
 
 # Default source directory (customize this)
-SOURCE_DIR="${1:-$HOME/.config/ninja-fleet}"
+SOURCE_DIR="${1:-$HOME/.config/ninja-fleet.conf}"
 USE_SYMLINKS=true
 
 # Check for --copy flag
