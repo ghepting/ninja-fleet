@@ -4,45 +4,57 @@
     that: wireguard_peer is defined
     fail_msg: "Please define wireguard_peer in inventory for this host (e.g., ninjaplex)"
 
-- name: vpn | Find WireGuard peer config directory on server
-  ansible.builtin.find:
-    paths: "{{ project_path }}/services/wireguard/config"
-    file_type: directory
-    patterns: "peer_{{ wireguard_peer }}"
-  delegate_to: ninja-server
-  register: plex_server_wg_peer_config_dir
-  become: true
-  tags: [plex, vpn]
-
-- name: vpn | Find WireGuard config file in peer directory
-  ansible.builtin.find:
-    paths: "{{ plex_server_wg_peer_config_dir.files[0].path }}"
-    patterns: "*.conf"
-  delegate_to: ninja-server
-  register: plex_server_wg_peer_config_exact
-  when: plex_server_wg_peer_config_dir.matched > 0
-  become: true
-  tags: [plex, vpn]
-
-- name: vpn | Read WireGuard config from server
+- name: vpn | Read wg-easy database from server
   ansible.builtin.slurp:
-    src: "{{ plex_server_wg_peer_config_exact.files[0].path }}"
+    src: "{{ project_path }}/services/wireguard/wg-easy/data/wg0.json"
   delegate_to: ninja-server
-  register: plex_server_wg_config_content
-  when: plex_server_wg_peer_config_dir.matched > 0 and plex_server_wg_peer_config_exact.matched > 0
+  register: plex_server_wg_easy_json
   become: true
+  tags: [plex, vpn]
+
+- name: vpn | Read server public key
+  ansible.builtin.command: docker exec wg-easy wg show wg0 public-key
+  delegate_to: ninja-server
+  register: plex_server_wg_server_public_key
+  changed_when: false
+  become: true
+  tags: [plex, vpn]
+
+- name: vpn | Extract peer config from JSON (Robust Matching)
+  ansible.builtin.set_fact:
+    plex_server_wg_peer_data: "{{ item }}"
+  loop: "{{ (plex_server_wg_easy_json.content | b64decode | from_json).get('peers', (plex_server_wg_easy_json.content | b64decode | from_json).get('clients', (plex_server_wg_easy_json.content | b64decode | from_json))).values() | list }}"
+  when: >-
+    item.name is defined and
+    (item.name | lower | replace('-', '') | replace('_', '')) ==
+    (wireguard_peer | lower | replace('-', '') | replace('_', ''))
+  tags: [plex, vpn]
+
+- name: vpn | Verify peer exists in wg-easy
+  ansible.builtin.assert:
+    that: plex_server_wg_peer_data.publicKey is defined
+    fail_msg: "Peer '{{ wireguard_peer }}' not found in wg-easy database."
   tags: [plex, vpn]
 
 - name: vpn | Ensure WireGuard configuration directory exists
   ansible.windows.win_file:
     path: 'C:\Program Files\WireGuard\Data\Configurations'
     state: directory
-  when: plex_server_wg_config_content.content is defined
   tags: [plex, vpn]
 
 - name: vpn | Write WireGuard config file
   ansible.windows.win_copy:
-    content: "{{ plex_server_wg_config_content['content'] | b64decode }}"
     dest: 'C:\Program Files\WireGuard\Data\Configurations\wg0.conf'
-  when: plex_server_wg_config_content.content is defined
+    content: |
+      [Interface]
+      PrivateKey = {{ plex_server_wg_peer_data.privateKey }}
+      Address = {{ plex_server_wg_peer_data.address }}/32
+      MTU = 1280
+
+      [Peer]
+      PublicKey = {{ plex_server_wg_server_public_key.stdout }}
+      PresharedKey = {{ plex_server_wg_peer_data.preSharedKey }}
+      Endpoint = {{ hostvars['ninja-server']['server_lan_ip'] | default('192.168.86.10') }}:51820
+      AllowedIPs = {{ wireguard_allowed_ips | default('10.13.13.0/24') }}
+      PersistentKeepalive = 25
   tags: [plex, vpn]

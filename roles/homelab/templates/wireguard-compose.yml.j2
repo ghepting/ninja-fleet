@@ -7,7 +7,7 @@ services:
     environment:
       - WG_HOST={{ wireguard_host | default('vpn.' + primary_domain) }}
       - WG_DEFAULT_ADDRESS={{ wireguard_default_address | default('10.0.0.x') }}
-      - WG_DEFAULT_DNS={{ server_vpn_ip | default('10.0.0.1') }}
+      - WG_DEFAULT_DNS={{ homelab_wireguard_final_dns }}
       - WG_ALLOWED_IPS={{ wireguard_allowed_ips | default('10.0.0.0/24') }}
       - WG_PRE_UP=ip route replace {{ server_lan_subnet | default('192.168.1.0/24') }} dev {{ server_network_interface | default('eth0') }} src {{ server_lan_ip | default('192.168.1.2') }}
       - WG_POST_UP=iptables -t nat -A POSTROUTING -o {{ server_network_interface | default('eth0') }} -j MASQUERADE

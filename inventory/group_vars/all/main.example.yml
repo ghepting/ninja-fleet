@@ -23,3 +23,16 @@ wireguard_allowed_ips: 10.10.10.0/24
 # Media server configuration (optional)
 audiobooks_mount_path: /mnt/storage/audiobooks
 plex_server_ip: 192.168.1.3
+
+# Caddy Configuration
+caddy_ssl_cert_path: /etc/ssl/example.com/wildcard.crt
+caddy_ssl_key_path: /etc/ssl/example.com/wildcard.key
+caddy_extra_config: |
+  # Add custom Caddy configuration here
+  # app.example.com {
+  #   reverse_proxy 127.0.0.1:8080
+  # }
+
+# Service Extra Networks
+uptime_kuma_extra_networks: []
+#  - some_external_network

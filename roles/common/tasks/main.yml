@@ -14,3 +14,7 @@
 - name: Install Flatpak
   ansible.builtin.include_tasks: flatpak.yml
   tags: [common, flatpak]
+
+- name: Setup Git
+  ansible.builtin.include_tasks: git.yml
+  tags: [common, git, shell]

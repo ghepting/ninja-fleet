@@ -1,34 +1,49 @@
-- name: vpn | Find WireGuard peer config directory on server
-  ansible.builtin.find:
-    paths: "{{ project_path }}/services/wireguard/config"
-    file_type: directory
-    patterns: "peer_{{ wireguard_peer }}"
-  delegate_to: ninja-server
-  register: phone_wg_peer_config_dir
-  become: true
-
-- name: vpn | Find WireGuard config file in peer directory
-  ansible.builtin.find:
-  delegate_to: ninja-server
-  register: phone_wg_peer_config_exact
-  when: phone_wg_peer_config_dir.matched > 0
-  become: true
-
-- name: vpn | Read WireGuard config from server
+- name: vpn | Read wg-easy database from server
   ansible.builtin.slurp:
-    src: "{{ phone_wg_peer_config_exact.files[0].path }}"
+    src: "{{ project_path }}/services/wireguard/wg-easy/data/wg0.json"
   delegate_to: ninja-server
-  register: phone_wg_config_content
-  when: phone_wg_peer_config_dir.matched > 0 and phone_wg_peer_config_exact.matched > 0
+  register: phone_wg_easy_json
   become: true
+
+- name: vpn | Read server public key
+  ansible.builtin.command: docker exec wg-easy wg show wg0 public-key
+  delegate_to: ninja-server
+  register: phone_wg_server_public_key
+  changed_when: false
+  become: true
+
+- name: vpn | Extract peer config from JSON (Robust Matching)
+  ansible.builtin.set_fact:
+    phone_wg_peer_data: "{{ item }}"
+  loop: "{{ (phone_wg_easy_json.content | b64decode | from_json).get('peers', (phone_wg_easy_json.content | b64decode | from_json).get('clients', (phone_wg_easy_json.content | b64decode | from_json))).values() | list }}"
+  when: >-
+    item.name is defined and
+    (item.name | lower | replace('-', '') | replace('_', '')) ==
+    (wireguard_peer | lower | replace('-', '') | replace('_', ''))
+
+- name: vpn | Verify peer exists in wg-easy
+  ansible.builtin.assert:
+    that: phone_wg_peer_data.publicKey is defined
+    fail_msg: "Peer '{{ wireguard_peer }}' not found in wg-easy database."
 
 - name: vpn | Push WireGuard config to phone via ADB
   ansible.builtin.shell: |
-    echo "{{ phone_wg_config_content.content | b64decode }}" > /tmp/{{ wireguard_peer }}.conf
+    cat <<EOF > /tmp/{{ wireguard_peer }}.conf
+    [Interface]
+    PrivateKey = {{ phone_wg_peer_data.privateKey }}
+    Address = {{ phone_wg_peer_data.address }}/32
+    MTU = 1280
+
+    [Peer]
+    PublicKey = {{ phone_wg_server_public_key.stdout }}
+    PresharedKey = {{ phone_wg_peer_data.preSharedKey }}
+    Endpoint = {{ hostvars['ninja-server']['server_lan_ip'] | default('192.168.86.10') }}:51820
+    AllowedIPs = {{ wireguard_allowed_ips | default('10.13.13.0/24') }}
+    PersistentKeepalive = 25
+    EOF
     adb push /tmp/{{ wireguard_peer }}.conf /sdcard/Download/ninja-fleet.conf
     rm /tmp/{{ wireguard_peer }}.conf
   delegate_to: localhost
-  when: phone_wg_peer_config_dir.matched > 0 and phone_wg_peer_config_exact.matched > 0
   changed_when: true
 
 - name: vpn | Provide import instructions

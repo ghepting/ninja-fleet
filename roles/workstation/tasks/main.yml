@@ -22,10 +22,6 @@
   ansible.builtin.include_tasks: ssh.yml
   tags: [ssh, shell]
 
-- name: Setup Git config
-  ansible.builtin.include_tasks: git.yml
-  tags: [git, shell]
-
 - name: Install apps
   ansible.builtin.include_tasks: apps.yml
   tags: [apps]
