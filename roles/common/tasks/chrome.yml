@@ -35,6 +35,7 @@
   ansible.builtin.apt:
     name: google-chrome-stable
     state: present
+
   become: true
   when: ansible_facts['pkg_mgr'] == 'apt'
   tags: [common, chrome, apt]
