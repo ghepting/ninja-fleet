@@ -84,13 +84,11 @@
 - name: vpn | Verify peer exists in wg-easy
   ansible.builtin.assert:
     that: workstation_wg_peer_data.publicKey is defined
-    fail_msg: "Peer '{{ wireguard_peer }}' not found."
+    fail_msg: >-
+      Peer '{{ wireguard_peer }}' not found. 
+      Peers found in DB: {{ workshop_peers_found | default('none') }}
   vars:
-    workshop_peers_found: >-
-      {{ (workstation_wg_json_deserialized.get('peers') or
-      workstation_wg_json_deserialized.get('clients') or
-      workstation_wg_json_deserialized).values() |
-      map(attribute='name', default='unknown') | list | join(', ') }}
+    workshop_peers_found: "{{ (workstation_wg_json_deserialized.get('peers') or workstation_wg_json_deserialized.get('clients') or workstation_wg_json_deserialized).values() | map(attribute='name', default='unknown') | list | join(', ') }}"
   tags: [workstation, vpn]
 
 - name: vpn | Ensure WireGuard directory exists
