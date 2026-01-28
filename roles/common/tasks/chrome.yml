@@ -1,0 +1,59 @@
+---
+- name: chrome | Debian/Ubuntu - Add Google Chrome GPG key
+  ansible.builtin.get_url:
+    url: https://dl.google.com/linux/linux_signing_key.pub
+    dest: /usr/share/keyrings/google-chrome.asc
+    mode: "0644"
+  become: true
+  when: ansible_facts['pkg_mgr'] == 'apt'
+  tags: [common, chrome, apt]
+
+- name: chrome | Debian/Ubuntu - Add Google Chrome repository
+  ansible.builtin.apt_repository:
+    repo: "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome.asc] http://dl.google.com/linux/chrome/deb/ stable main"
+    filename: google-chrome
+    state: present
+  become: true
+  when: ansible_facts['pkg_mgr'] == 'apt'
+  tags: [common, chrome, apt]
+
+- name: chrome | Debian/Ubuntu - Install Google Chrome
+  ansible.builtin.apt:
+    name: google-chrome-stable
+    state: present
+    update_cache: true
+  become: true
+  when: ansible_facts['pkg_mgr'] == 'apt'
+  tags: [common, chrome, apt]
+
+- name: chrome | Fedora - Enable Google Chrome repository
+  ansible.builtin.shell:
+    cmd: dnf config-manager --set-enabled google-chrome
+  become: true
+  when: ansible_facts['pkg_mgr'] == 'dnf'
+  tags: [common, chrome, dnf]
+  ignore_errors: true # In case it's already enabled or not present
+
+- name: chrome | Fedora - Install Google Chrome
+  ansible.builtin.dnf:
+    name: google-chrome-stable
+    state: present
+  become: true
+  when: ansible_facts['pkg_mgr'] == 'dnf'
+  tags: [common, chrome, dnf]
+
+- name: chrome | Arch - Check if Google Chrome is installed
+  ansible.builtin.command: pacman -Qi google-chrome
+  register: chrome_check
+  failed_when: false
+  changed_when: false
+  when: ansible_facts['pkg_mgr'] == 'pacman'
+  tags: [common, chrome, pacman]
+
+- name: chrome | Arch - Install Google Chrome via AUR (if missing)
+  ansible.builtin.debug:
+    msg: "Google Chrome is missing. please install it via AUR (e.g., 'yay -S google-chrome') if this is a workstation."
+  when:
+    - ansible_facts['pkg_mgr'] == 'pacman'
+    - chrome_check.rc != 0
+  tags: [common, chrome, pacman]

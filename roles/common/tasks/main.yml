@@ -18,3 +18,8 @@
 - name: Setup Git
   ansible.builtin.include_tasks: git.yml
   tags: [common, git, shell]
+
+- name: Setup Google Chrome (Native)
+  ansible.builtin.include_tasks: chrome.yml
+  when: ansible_facts['os_family'] != 'Darwin' and ansible_facts['system'] == 'Linux'
+  tags: [common, chrome, apps]
