@@ -1,0 +1,16 @@
+---
+- name: Bootstrap SSH Keys
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Ensure .ssh directory exists
+      ansible.builtin.file:
+        path: ~/.ssh
+        state: directory
+        mode: "0700"
+
+    - name: Deploy SSH public key
+      ansible.posix.authorized_key:
+        user: "{{ ansible_user | default(admin_username) }}"
+        state: present
+        key: "{{ git_signing_key | replace('key::', '') }}"

@@ -36,3 +36,14 @@
         export SSH_AUTH_SOCK="$HOME/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
       fi
   tags: [zsh, shell]
+
+- name: zsh | Source ninja-fleet venv (Linux)
+  ansible.builtin.blockinfile:
+    path: "~/.zshrc"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK: NINJA FLEET"
+    block: |
+      if [[ -f "$HOME/Development/ninja-fleet/.venv/bin/activate" ]]; then
+        source "$HOME/Development/ninja-fleet/.venv/bin/activate"
+      fi
+  when: ansible_facts['system'] == 'Linux'
+  tags: [zsh, shell]

@@ -25,7 +25,7 @@
 
 - name: system | Allow Plex Media Server TCP / 32400
   community.windows.win_firewall_rule:
-    name: "Plex Media Server"
+    name: "Plex Media Server (Custom)"
     localport: 32400
     action: allow
     direction: in

@@ -84,7 +84,9 @@
 - name: vpn | Verify peer exists in wg-easy
   ansible.builtin.assert:
     that: workstation_wg_peer_data.publicKey is defined
-    fail_msg: "Peer '{{ wireguard_peer }}' not found."
+    fail_msg: >-
+      Peer '{{ wireguard_peer }}' not found.
+      Peers found in DB: {{ workshop_peers_found | default('none') }}
   vars:
     workshop_peers_found: >-
       {{ (workstation_wg_json_deserialized.get('peers') or
@@ -141,12 +143,28 @@
     insertafter: '\[Interface\]'
     marker: "# {mark} ANSIBLE MANAGED SPLIT DNS"
     block: |
-      PostUp = resolvectl dns %i \
-        {{ hostvars['ninja-server']['server_lan_ip'] | default('192.168.86.10') }} \
-        {{ hostvars['ninja-server']['server_vpn_ip'] | default('10.13.13.1') }};
-      PostUp = resolvectl domain %i ~lan ~{{ primary_domain | default('example.com') }}
+      PostUp = resolvectl dns %i {{ dns_server_primary }} {{ dns_server_secondary }}
+      PostUp = resolvectl domain %i ~lan ~{{ dns_domain }}
       PostDown = resolvectl revert %i
+  vars:
+    dns_server_primary: "{{ hostvars['ninja-server']['server_lan_ip'] | default('192.168.86.10') }}"
+    dns_server_secondary: "{{ hostvars['ninja-server']['server_vpn_ip'] | default('10.13.13.1') }}"
+    dns_domain: "{{ primary_domain | default('example.com') }}"
   become: true
   when: ansible_facts['system'] == 'Linux'
   tags: [workstation, vpn]
   notify: Restart WireGuard
+
+- name: vpn | Ensure WireGuard is started (macOS)
+  ansible.builtin.shell: |
+    if ! wg show wg0 >/dev/null 2>&1; then
+      wg-quick up wg0
+    fi
+  register: workstation_wg_start_mac
+  failed_when:
+    - workstation_wg_start_mac.rc != 0
+    - "'already exists' not in workstation_wg_start_mac.stderr"
+  when: ansible_facts['os_family'] == 'Darwin'
+  become: true
+  changed_when: workstation_wg_start_mac.rc == 0 and "utun" in workstation_wg_start_mac.stdout
+  tags: [workstation, vpn]

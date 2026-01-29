@@ -20,4 +20,5 @@ repos:
         name: Ansible-lint
         entry: ansible-lint --offline
         language: system
+        stages: [pre-commit, pre-push]
         types: [yaml]

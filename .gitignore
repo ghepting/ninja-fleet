@@ -3,6 +3,9 @@
 *.retry
 *.log
 
+# Python Virtual Env
+.venv/
+
 # Inventory (Sensitive Data)
 inventory/hosts.ini
 inventory/group_vars/all/main.yml
