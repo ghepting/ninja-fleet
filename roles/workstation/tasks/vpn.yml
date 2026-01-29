@@ -143,11 +143,13 @@
     insertafter: '\[Interface\]'
     marker: "# {mark} ANSIBLE MANAGED SPLIT DNS"
     block: |
-      PostUp = resolvectl dns %i \
-        {{ hostvars['ninja-server']['server_lan_ip'] | default('192.168.86.10') }} \
-        {{ hostvars['ninja-server']['server_vpn_ip'] | default('10.13.13.1') }};
-      PostUp = resolvectl domain %i ~lan ~{{ primary_domain | default('example.com') }}
+      PostUp = resolvectl dns %i {{ dns_server_primary }} {{ dns_server_secondary }}
+      PostUp = resolvectl domain %i ~lan ~{{ dns_domain }}
       PostDown = resolvectl revert %i
+  vars:
+    dns_server_primary: "{{ hostvars['ninja-server']['server_lan_ip'] | default('192.168.86.10') }}"
+    dns_server_secondary: "{{ hostvars['ninja-server']['server_vpn_ip'] | default('10.13.13.1') }}"
+    dns_domain: "{{ primary_domain | default('example.com') }}"
   become: true
   when: ansible_facts['system'] == 'Linux'
   tags: [workstation, vpn]
