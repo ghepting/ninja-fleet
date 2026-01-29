@@ -7,7 +7,9 @@
 
 - name: vpn | Install WireGuard tools (Debian/Ubuntu)
   ansible.builtin.apt:
-    name: wireguard-tools
+    name:
+      - wireguard-tools
+      - resolvconf
     state: present
   become: true
   when: ansible_facts['pkg_mgr'] == 'apt'
@@ -29,35 +31,66 @@
   when: ansible_facts['pkg_mgr'] == 'pacman'
   tags: [workstation, vpn]
 
+- name: vpn | Ensure systemd-resolved is started (Linux)
+  ansible.builtin.systemd:
+    name: systemd-resolved
+    state: started
+    enabled: true
+    masked: false
+  become: true
+  when: ansible_facts['system'] == 'Linux'
+  tags: [workstation, vpn]
+
 - name: vpn | Ensure wireguard_peer is defined
   ansible.builtin.assert:
     that: wireguard_peer is defined
     fail_msg: "Please define wireguard_peer in inventory for this host (e.g., workstation1, workstation2)"
 
-- name: vpn | Find WireGuard peer config directory on server
-  ansible.builtin.find:
-    paths: "{{ project_path }}/services/wireguard/config"
-    file_type: directory
-    patterns: "peer_{{ wireguard_peer }}"
-  delegate_to: ninja-server
-  register: workstation_wg_peer_config_dir
-  tags: [workstation, vpn]
-
-- name: vpn | Find WireGuard config file in peer directory
-  ansible.builtin.find:
-    paths: "{{ workstation_wg_peer_config_dir.files[0].path }}"
-    patterns: "*.conf"
-  delegate_to: ninja-server
-  register: workstation_wg_peer_config_exact
-  when: workstation_wg_peer_config_dir.matched > 0
-  tags: [workstation, vpn]
-
-- name: vpn | Read WireGuard config from server
+- name: vpn | Read wg-easy database from server
   ansible.builtin.slurp:
-    src: "{{ workstation_wg_peer_config_exact.files[0].path }}"
+    src: "{{ hostvars['ninja-server']['project_path'] }}/services/wireguard/wg-easy/data/wg0.json"
   delegate_to: ninja-server
-  register: workstation_wg_config_content
-  when: workstation_wg_peer_config_dir.matched > 0 and workstation_wg_peer_config_exact.matched > 0
+  register: workstation_wg_easy_json
+  become: true
+  tags: [workstation, vpn]
+
+- name: vpn | Read server public key
+  ansible.builtin.command: docker exec wg-easy wg show wg0 public-key
+  delegate_to: ninja-server
+  register: workstation_wg_server_public_key
+  changed_when: false
+  become: true
+  tags: [workstation, vpn]
+
+- name: vpn | Clear previous peer data (to avoid stale matches)
+  ansible.builtin.set_fact:
+    workstation_wg_peer_data: {}
+    workstation_wg_json_deserialized: "{{ workstation_wg_easy_json.content | b64decode | from_json }}"
+  tags: [workstation, vpn]
+
+- name: vpn | Extract peer config from JSON (Robust Matching)
+  ansible.builtin.set_fact:
+    workstation_wg_peer_data: "{{ item }}"
+  loop: >-
+    {{ (workstation_wg_json_deserialized.get('peers') or
+    workstation_wg_json_deserialized.get('clients') or
+    workstation_wg_json_deserialized).values() | list }}
+  when: >-
+    item.name is defined and
+    (item.name | lower | replace('-', '') | replace('_', '')) ==
+    (wireguard_peer | lower | replace('-', '') | replace('_', ''))
+  tags: [workstation, vpn]
+
+- name: vpn | Verify peer exists in wg-easy
+  ansible.builtin.assert:
+    that: workstation_wg_peer_data.publicKey is defined
+    fail_msg: "Peer '{{ wireguard_peer }}' not found."
+  vars:
+    workshop_peers_found: >-
+      {{ (workstation_wg_json_deserialized.get('peers') or
+      workstation_wg_json_deserialized.get('clients') or
+      workstation_wg_json_deserialized).values() |
+      map(attribute='name', default='unknown') | list | join(', ') }}
   tags: [workstation, vpn]
 
 - name: vpn | Ensure WireGuard directory exists
@@ -69,16 +102,51 @@
     group: "{{ (ansible_facts['os_family'] == 'Darwin') | ternary('admin', 'root') }}"
   become: "{{ ansible_facts['os_family'] != 'Darwin' }}"
   tags: [workstation, vpn]
-  when: workstation_wg_config_content.content is defined
 
 - name: vpn | Write WireGuard config file
   ansible.builtin.copy:
-    content: "{{ workstation_wg_config_content['content'] | b64decode }}"
     dest: "{{ (ansible_facts['os_family'] == 'Darwin') | ternary('/opt/homebrew/etc/wireguard/wg0.conf', '/etc/wireguard/wg0.conf') }}"
     mode: "0600"
     owner: "{{ (ansible_facts['os_family'] == 'Darwin') | ternary(admin_username, 'root') }}"
     group: "{{ (ansible_facts['os_family'] == 'Darwin') | ternary('admin', 'root') }}"
+    content: |
+      [Interface]
+      PrivateKey = {{ workstation_wg_peer_data.privateKey }}
+      Address = {{ workstation_wg_peer_data.address }}/32
+      MTU = 1280
+
+      [Peer]
+      PublicKey = {{ workstation_wg_server_public_key.stdout }}
+      PresharedKey = {{ workstation_wg_peer_data.preSharedKey }}
+      Endpoint = {{ hostvars['ninja-server']['server_lan_ip'] | default('192.168.86.10') }}:51820
+      AllowedIPs = {{ wireguard_allowed_ips | default('10.13.13.0/24') }}
+      PersistentKeepalive = 25
   become: "{{ ansible_facts['os_family'] != 'Darwin' }}"
   tags: [workstation, vpn]
-  when: workstation_wg_config_content.content is defined
+  notify: Restart WireGuard
+
+- name: vpn | Patch WireGuard config for Split DNS (Linux)
+  ansible.builtin.lineinfile:
+    path: /etc/wireguard/wg0.conf
+    regexp: '^DNS\s*='
+    state: absent
+  become: true
+  when: ansible_facts['system'] == 'Linux'
+  tags: [workstation, vpn]
+  notify: Restart WireGuard
+
+- name: vpn | Ensure PostUp/PostDown for Split DNS (Linux)
+  ansible.builtin.blockinfile:
+    path: /etc/wireguard/wg0.conf
+    insertafter: '\[Interface\]'
+    marker: "# {mark} ANSIBLE MANAGED SPLIT DNS"
+    block: |
+      PostUp = resolvectl dns %i \
+        {{ hostvars['ninja-server']['server_lan_ip'] | default('192.168.86.10') }} \
+        {{ hostvars['ninja-server']['server_vpn_ip'] | default('10.13.13.1') }};
+      PostUp = resolvectl domain %i ~lan ~{{ primary_domain | default('example.com') }}
+      PostDown = resolvectl revert %i
+  become: true
+  when: ansible_facts['system'] == 'Linux'
+  tags: [workstation, vpn]
   notify: Restart WireGuard

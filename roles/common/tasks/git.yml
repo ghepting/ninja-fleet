@@ -1,0 +1,19 @@
+- name: git | Ensure local bin directory exists
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.local/bin"
+    state: directory
+    mode: "0755"
+
+- name: git | Deploy git-ssh-sign-wrapper
+  ansible.builtin.copy:
+    src: bin/git-ssh-sign-wrapper
+    dest: "{{ ansible_facts['env']['HOME'] }}/.local/bin/git-ssh-sign-wrapper"
+    mode: "0755"
+
+- name: git | Configure git
+  ansible.builtin.template:
+    src: gitconfig.j2
+    dest: "{{ ansible_facts['env']['HOME'] }}/.gitconfig"
+    owner: "{{ admin_username }}"
+    group: "{{ admin_group | default(admin_username) }}"
+    mode: "0644"

@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+# .gitconfig.signing_wrapper
+# This script intelligently handles Git SSH signing based on the environment.
+# It prioritizes 1Password's signer when working locally and falls back to
+# ssh-keygen when in an SSH session (to use agent forwarding) or if 1Password is missing.
+
+# Check for SSH session (TTY, Connection, or Client)
+if [ -n "$SSH_TTY" ] || [ -n "$SSH_CONNECTION" ] || [ -n "$SSH_CLIENT" ]; then
+  exec ssh-keygen "$@"
+fi
+
+# Known paths for 1Password SSH signer
+OP_SIGNER_MAC="${OP_SIGNER_MAC:-/Applications/1Password.app/Contents/MacOS/op-ssh-sign}"
+OP_SIGNER_LINUX="${OP_SIGNER_LINUX:-/opt/1Password/op-ssh-sign}"
+
+if [ -f "$OP_SIGNER_MAC" ]; then
+  exec "$OP_SIGNER_MAC" "$@"
+elif [ -f "$OP_SIGNER_LINUX" ]; then
+  exec "$OP_SIGNER_LINUX" "$@"
+else
+  # Fallback to standard ssh-keygen (default Git behavior)
+  exec ssh-keygen "$@"
+fi

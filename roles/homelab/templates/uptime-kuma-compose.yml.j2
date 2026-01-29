@@ -4,10 +4,12 @@ services:
     container_name: uptime-kuma
     restart: always
     volumes:
-      - /opt/homelab/services/uptime-kuma/data:/app/data
+      - {{ project_path }}/services/uptime-kuma/data:/app/data
       - /var/run/docker.sock:/var/run/docker.sock
     ports:
       - "3001:3001"
     networks:
       - homelab
-      # Add other networks as needed
+{% for network in uptime_kuma_extra_networks | default([]) %}
+      - {{ network }}
+{% endfor %}
