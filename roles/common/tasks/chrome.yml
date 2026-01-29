@@ -12,10 +12,19 @@
   when: ansible_facts['pkg_mgr'] == 'apt'
   tags: [common, chrome, apt]
 
+- name: chrome | Debian/Ubuntu - Prevent Google Chrome from adding its own repository
+  ansible.builtin.copy:
+    content: "repo_add_once=false\n"
+    dest: /etc/default/google-chrome
+    mode: "0644"
+  become: true
+  when: ansible_facts['pkg_mgr'] == 'apt'
+  tags: [common, chrome, apt]
+
 - name: chrome | Debian/Ubuntu - Add Google Chrome repository
   ansible.builtin.apt_repository:
     repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/google-chrome.asc] https://dl.google.com/linux/chrome/deb/ stable main"
-    filename: google-chrome-stable
+    filename: google-chrome
     state: present
     update_cache: true
   become: true
