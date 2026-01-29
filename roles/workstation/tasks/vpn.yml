@@ -85,10 +85,14 @@
   ansible.builtin.assert:
     that: workstation_wg_peer_data.publicKey is defined
     fail_msg: >-
-      Peer '{{ wireguard_peer }}' not found. 
+      Peer '{{ wireguard_peer }}' not found.
       Peers found in DB: {{ workshop_peers_found | default('none') }}
   vars:
-    workshop_peers_found: "{{ (workstation_wg_json_deserialized.get('peers') or workstation_wg_json_deserialized.get('clients') or workstation_wg_json_deserialized).values() | map(attribute='name', default='unknown') | list | join(', ') }}"
+    workshop_peers_found: >-
+      {{ (workstation_wg_json_deserialized.get('peers') or
+      workstation_wg_json_deserialized.get('clients') or
+      workstation_wg_json_deserialized).values() |
+      map(attribute='name', default='unknown') | list | join(', ') }}
   tags: [workstation, vpn]
 
 - name: vpn | Ensure WireGuard directory exists
@@ -148,3 +152,17 @@
   when: ansible_facts['system'] == 'Linux'
   tags: [workstation, vpn]
   notify: Restart WireGuard
+
+- name: vpn | Ensure WireGuard is started (macOS)
+  ansible.builtin.shell: |
+    if ! wg show wg0 >/dev/null 2>&1; then
+      wg-quick up wg0
+    fi
+  register: workstation_wg_start_mac
+  failed_when:
+    - workstation_wg_start_mac.rc != 0
+    - "'already exists' not in workstation_wg_start_mac.stderr"
+  when: ansible_facts['os_family'] == 'Darwin'
+  become: true
+  changed_when: workstation_wg_start_mac.rc == 0 and "utun" in workstation_wg_start_mac.stdout
+  tags: [workstation, vpn]

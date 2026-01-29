@@ -4,12 +4,36 @@
     that: wireguard_peer is defined
     fail_msg: "Please define wireguard_peer in inventory for this host (e.g., ninjaplex)"
 
+- name: vpn | Install WireGuard (Prerequisite)
+  chocolatey.chocolatey.win_chocolatey:
+    name: wireguard
+    state: present
+  tags: [plex, vpn]
+
+- name: vpn | Cleanup temporary tunnels (ninja/homevpn)
+  ansible.windows.win_shell: |
+    Get-Service WireGuardTunnel$ninja, WireGuardTunnel$homevpn -ErrorAction SilentlyContinue | Stop-Service -Force
+    & "C:\Program Files\WireGuard\wireguard.exe" /uninstalltunnelservice "ninja"
+    & "C:\Program Files\WireGuard\wireguard.exe" /uninstalltunnelservice "homevpn"
+  failed_when: false
+  tags: [plex, vpn]
+
+- name: vpn | Ensure Network Setup Service is Running (Fix Code 56)
+  ansible.windows.win_service:
+    name: NetSetupSvc
+    state: started
+    start_mode: auto
+  tags: [plex, vpn]
+
 - name: vpn | Read wg-easy database from server
   ansible.builtin.slurp:
-    src: "{{ project_path }}/services/wireguard/wg-easy/data/wg0.json"
+    src: "{{ hostvars['ninja-server']['project_path'] }}/services/wireguard/wg-easy/data/wg0.json"
   delegate_to: ninja-server
   register: plex_server_wg_easy_json
   become: true
+  become_method: ansible.builtin.sudo
+  vars:
+    ansible_shell_type: sh
   tags: [plex, vpn]
 
 - name: vpn | Read server public key
@@ -18,6 +42,9 @@
   register: plex_server_wg_server_public_key
   changed_when: false
   become: true
+  become_method: ansible.builtin.sudo
+  vars:
+    ansible_shell_type: sh
   tags: [plex, vpn]
 
 - name: vpn | Extract peer config from JSON (Robust Matching)
@@ -60,4 +87,26 @@
       Endpoint = {{ hostvars['ninja-server']['server_lan_ip'] | default('192.168.86.10') }}:51820
       AllowedIPs = {{ wireguard_allowed_ips | default('10.13.13.0/24') }}
       PersistentKeepalive = 25
+  tags: [plex, vpn]
+
+- name: vpn | Install/Update WireGuard Tunnel Service
+  ansible.windows.win_shell: |
+    $serviceName = "WireGuardTunnel$wg0"
+    if (Get-Service $serviceName -ErrorAction SilentlyContinue) {
+        Write-Host "Service exists, ensuring config is applied."
+        # Optional: You might want to restart it if config changed, or just ensure running.
+        # For now, we rely on win_service to start it.
+    } else {
+        Write-Host "Installing service..."
+        & "C:\Program Files\WireGuard\wireguard.exe" /installtunnelservice "C:\Program Files\WireGuard\Data\Configurations\wg0.conf"
+    }
+  register: plex_server_wg_service_install
+  changed_when: "'Installing service...' in plex_server_wg_service_install.stdout"
+  tags: [plex, vpn]
+
+- name: vpn | Ensure WireGuard Tunnel Service is Started
+  ansible.windows.win_service:
+    name: "WireGuardTunnel$wg0"
+    state: started
+    start_mode: auto
   tags: [plex, vpn]

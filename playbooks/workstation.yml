@@ -1,5 +1,9 @@
 - name: Workstation Playbook
   hosts: workstation
+  environment:
+    PATH: "{{ '/opt/homebrew/bin:/usr/local/bin:' + ansible_env.PATH
+      if (ansible_os_family | default('') == 'Darwin')
+      else ansible_env.PATH | default(ansible_facts['env']['PATH']) | default('/usr/bin:/bin:/usr/sbin:/sbin') }}"
   roles:
     - common
     - workstation
