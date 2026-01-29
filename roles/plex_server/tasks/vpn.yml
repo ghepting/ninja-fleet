@@ -23,7 +23,10 @@
 - name: vpn | Extract peer config from JSON (Robust Matching)
   ansible.builtin.set_fact:
     plex_server_wg_peer_data: "{{ item }}"
-  loop: "{{ (plex_server_wg_easy_json.content | b64decode | from_json).get('peers', (plex_server_wg_easy_json.content | b64decode | from_json).get('clients', (plex_server_wg_easy_json.content | b64decode | from_json))).values() | list }}"
+  loop: >-
+    {{ (plex_server_wg_easy_json.content | b64decode | from_json).get('peers',
+    (plex_server_wg_easy_json.content | b64decode | from_json).get('clients',
+    (plex_server_wg_easy_json.content | b64decode | from_json))).values() | list }}
   when: >-
     item.name is defined and
     (item.name | lower | replace('-', '') | replace('_', '')) ==

@@ -71,7 +71,10 @@
 - name: vpn | Extract peer config from JSON (Robust Matching)
   ansible.builtin.set_fact:
     workstation_wg_peer_data: "{{ item }}"
-  loop: "{{ (workstation_wg_json_deserialized.get('peers') or workstation_wg_json_deserialized.get('clients') or workstation_wg_json_deserialized).values() | list }}"
+  loop: >-
+    {{ (workstation_wg_json_deserialized.get('peers') or
+    workstation_wg_json_deserialized.get('clients') or
+    workstation_wg_json_deserialized).values() | list }}
   when: >-
     item.name is defined and
     (item.name | lower | replace('-', '') | replace('_', '')) ==
@@ -81,11 +84,13 @@
 - name: vpn | Verify peer exists in wg-easy
   ansible.builtin.assert:
     that: workstation_wg_peer_data.publicKey is defined
-    fail_msg: >-
-      Peer '{{ wireguard_peer }}' not found. 
-      Peers found in DB: {{ workshop_peers_found | default('none') }}
+    fail_msg: "Peer '{{ wireguard_peer }}' not found."
   vars:
-    workshop_peers_found: "{{ (workstation_wg_json_deserialized.get('peers') or workstation_wg_json_deserialized.get('clients') or workstation_wg_json_deserialized).values() | map(attribute='name', default='unknown') | list | join(', ') }}"
+    workshop_peers_found: >-
+      {{ (workstation_wg_json_deserialized.get('peers') or
+      workstation_wg_json_deserialized.get('clients') or
+      workstation_wg_json_deserialized).values() |
+      map(attribute='name', default='unknown') | list | join(', ') }}
   tags: [workstation, vpn]
 
 - name: vpn | Ensure WireGuard directory exists
@@ -136,7 +141,10 @@
     insertafter: '\[Interface\]'
     marker: "# {mark} ANSIBLE MANAGED SPLIT DNS"
     block: |
-      PostUp = resolvectl dns %i {{ hostvars['ninja-server']['server_lan_ip'] | default('192.168.86.10') }} {{ hostvars['ninja-server']['server_vpn_ip'] | default('10.13.13.1') }}; resolvectl domain %i ~lan ~{{ primary_domain | default('example.com') }}
+      PostUp = resolvectl dns %i \
+        {{ hostvars['ninja-server']['server_lan_ip'] | default('192.168.86.10') }} \
+        {{ hostvars['ninja-server']['server_vpn_ip'] | default('10.13.13.1') }};
+      PostUp = resolvectl domain %i ~lan ~{{ primary_domain | default('example.com') }}
       PostDown = resolvectl revert %i
   become: true
   when: ansible_facts['system'] == 'Linux'

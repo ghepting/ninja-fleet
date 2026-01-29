@@ -130,9 +130,10 @@
   tags: [homelab, docker, deploy, caddy, vpn, dns]
 
 - name: Homelab | Format Caddyfile (Post-Deploy)
-  ansible.builtin.shell:
+  ansible.builtin.command:
     cmd: "docker exec caddy caddy fmt --overwrite /etc/caddy/Caddyfile"
   become: true
+  changed_when: false
   tags: [homelab, caddy, config]
 
 - name: Homelab | Ensure wg-easy database uses split-DNS search suffix

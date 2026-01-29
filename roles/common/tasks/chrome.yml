@@ -27,12 +27,13 @@
   tags: [common, chrome, apt]
 
 - name: chrome | Fedora - Enable Google Chrome repository
-  ansible.builtin.shell:
+  ansible.builtin.command:
     cmd: dnf config-manager --set-enabled google-chrome
   become: true
   when: ansible_facts['pkg_mgr'] == 'dnf'
   tags: [common, chrome, dnf]
-  ignore_errors: true # In case it's already enabled or not present
+  failed_when: false
+  changed_when: false
 
 - name: chrome | Fedora - Install Google Chrome
   ansible.builtin.dnf:
@@ -44,7 +45,7 @@
 
 - name: chrome | Arch - Check if Google Chrome is installed
   ansible.builtin.command: pacman -Qi google-chrome
-  register: chrome_check
+  register: common_chrome_check
   failed_when: false
   changed_when: false
   when: ansible_facts['pkg_mgr'] == 'pacman'
@@ -55,5 +56,5 @@
     msg: "Google Chrome is missing. please install it via AUR (e.g., 'yay -S google-chrome') if this is a workstation."
   when:
     - ansible_facts['pkg_mgr'] == 'pacman'
-    - chrome_check.rc != 0
+    - common_chrome_check.rc != 0
   tags: [common, chrome, pacman]
