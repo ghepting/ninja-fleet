@@ -3,12 +3,14 @@
     path: /Applications/Antigravity.app
   register: workstation_antigravity_app_installed
   when: ansible_facts['os_family'] == 'Darwin'
+  tags: [apps, associations]
 
 - name: file_associations | Check if Antigravity is installed (macOS Binary)
   ansible.builtin.stat:
     path: /usr/local/bin/antigravity
   register: workstation_antigravity_installed
   when: ansible_facts['os_family'] == 'Darwin'
+  tags: [apps, associations]
 
 - name: file_associations | Configure Antigravity default associations (macOS)
   ansible.builtin.shell:
@@ -59,6 +61,7 @@
   failed_when: false
   changed_when: false
   when: ansible_facts['system'] == 'Linux'
+  tags: [apps, associations]
 
 - name: file_associations | Configure Antigravity default associations (Linux)
   ansible.builtin.command:
