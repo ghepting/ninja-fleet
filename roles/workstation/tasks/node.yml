@@ -1,11 +1,12 @@
-- name: node | Install nvm
+- name: node | Install NVM
   ansible.builtin.git:
     repo: https://github.com/nvm-sh/nvm.git
     dest: "~/.nvm"
     version: v0.39.7
   become: false
+  tags: [node, nvm, shell]
 
-- name: node | Source nvm in .zshrc
+- name: node | Source NVM in .zshrc
   ansible.builtin.blockinfile:
     path: "~/.zshrc"
     marker: "# {mark} ANSIBLE MANAGED BLOCK: NVM"
@@ -14,8 +15,9 @@
       [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
       [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
   become: false
+  tags: [node, nvm, shell]
 
-- name: node | Install node
+- name: node | Install Node
   ansible.builtin.shell:
     cmd: |
       source ~/.nvm/nvm.sh
@@ -25,3 +27,28 @@
   args:
     creates: "~/.nvm/alias/default"
   become: false
+  tags: [node, nvm, shell]
+
+- name: node | Install PNPM
+  ansible.builtin.shell:
+    cmd: set -o pipefail && curl -fsSL https://get.pnpm.io/install.sh | sh -
+    executable: /bin/zsh
+    creates: "~/Library/pnpm/pnpm"
+  become: false
+  tags: [node, pnpm, shell]
+  # noqa: command-instead-of-module risky-shell-pipe
+
+- name: node | PNPM shell configuration
+  ansible.builtin.blockinfile:
+    path: "~/.zshrc"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK: PNPM"
+    block: |
+      # pnpm
+      export PNPM_HOME="/Users/gary/Library/pnpm"
+      case ":$PATH:" in
+        *":$PNPM_HOME:"*) ;;
+        *) export PATH="$PNPM_HOME:$PATH" ;;
+      esac
+      # pnpm end
+  become: false
+  tags: [node, pnpm, shell]

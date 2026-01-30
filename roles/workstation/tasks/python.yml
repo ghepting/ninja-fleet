@@ -22,3 +22,10 @@
       [[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
       eval "$(pyenv init - zsh)"
   tags: [python, pyenv]
+
+- name: python | Sync pyenv shims
+  ansible.builtin.shell:
+    cmd: eval "$(pyenv init - zsh)" && pyenv rehash
+    executable: /bin/zsh
+  changed_when: false
+  tags: [python, pyenv]

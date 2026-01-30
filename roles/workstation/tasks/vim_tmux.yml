@@ -3,6 +3,7 @@
     path: "~/.vim/bundle"
     state: directory
     mode: "0755"
+  tags: [vim, tmux, dotfiles]
 
 - name: vim_tmux | Install Vundle
   ansible.builtin.git:
@@ -10,6 +11,7 @@
     dest: "~/.vim/bundle/Vundle.vim"
     version: master
   become: false
+  tags: [vim, tmux, dotfiles]
 
 - name: vim_tmux | Deploy Vim templates
   ansible.builtin.template:

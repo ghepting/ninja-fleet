@@ -7,6 +7,7 @@
     update_homebrew: true
   when: ansible_facts['os_family'] == 'Darwin'
   become: false
+  tags: [ruby, rbenv, shell]
 
 - name: ruby | Install rbenv and ruby-build (Debian/Ubuntu)
   when: ansible_facts['pkg_mgr'] == 'apt'
@@ -17,6 +18,7 @@
       - ruby-build
     state: present
     update_cache: true
+  tags: [ruby, rbenv, shell]
 
 - name: ruby | Install rbenv and ruby-build (Fedora)
   when: ansible_facts['pkg_mgr'] == 'dnf'
@@ -25,6 +27,7 @@
     name:
       - rbenv
     state: present
+  tags: [ruby, rbenv, shell]
 
 - name: ruby | Install rbenv and ruby-build (Arch)
   community.general.pacman:
@@ -34,6 +37,7 @@
     update_cache: true
   when: ansible_facts['pkg_mgr'] == 'pacman'
   become: true
+  tags: [ruby, rbenv, shell]
 
 - name: ruby | Initialize rbenv in .zshrc
   ansible.builtin.blockinfile:
@@ -42,6 +46,7 @@
     block: |
       eval "$(rbenv init - zsh)"
   become: false
+  tags: [ruby, rbenv, shell]
 
 - name: ruby | Install latest ruby (via rbenv)
   ansible.builtin.shell:
@@ -55,3 +60,4 @@
   args:
     creates: "~/.rbenv/versions"
   become: false
+  tags: [ruby, rbenv, shell]

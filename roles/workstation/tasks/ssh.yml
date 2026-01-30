@@ -5,3 +5,4 @@
     owner: "{{ admin_username }}"
     group: "{{ admin_group | default(admin_username) }}"
     mode: "0600"
+  tags: [ssh, shell]
