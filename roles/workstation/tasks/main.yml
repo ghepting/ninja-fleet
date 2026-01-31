@@ -28,7 +28,7 @@
 
 - name: Install AI tools
   ansible.builtin.include_tasks: ai_tools.yml
-  tags: [ai, claude, gemini]
+  tags: [ai, gemini]
 
 - name: Setup File Associations
   ansible.builtin.include_tasks: file_associations.yml
