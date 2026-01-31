@@ -11,6 +11,7 @@
       - the_silver_searcher
       - universal-ctags
       - direnv
+      - watch
     state: present
     update_homebrew: true
   register: common_homebrew_core_install
@@ -32,6 +33,7 @@
       - silversearcher-ag
       - universal-ctags
       - direnv
+      - procps
     state: present
     update_cache: true
 
@@ -48,6 +50,7 @@
       - the_silver_searcher
       - ctags
       - direnv
+      - procps-ng
     state: present
 
 - name: core | Check for pacman lock (Arch)
@@ -133,6 +136,7 @@
       - the_silver_searcher
       - ctags
       - direnv
+      - procps-ng
     state: present
     update_cache: true
   async: 600
