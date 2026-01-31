@@ -16,8 +16,9 @@
 - name: ai_tools | Install OpenClaw.ai
   ansible.builtin.shell:
     cmd: |
+      [ -f ~/.nvm/nvm.sh ] && source ~/.nvm/nvm.sh
       if ! command -v openclaw &> /dev/null; then
-        set -o pipefail && curl -fsSL https://openclaw.ai/install.sh | bash
+        set -o pipefail && curl -fsSL https://openclaw.ai/install.sh | bash -s -- --no-onboard --no-prompt
       else
         echo "ALREADY_INSTALLED"
       fi
