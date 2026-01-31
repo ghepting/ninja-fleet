@@ -1,11 +1,3 @@
-- name: ai_tools | Install Claude Code CLI
-  ansible.builtin.shell:
-    cmd: set -o pipefail && curl -fsSL https://claude.ai/install.sh | zsh
-    executable: /bin/zsh
-    creates: "~/.local/bin/claude"
-  when: not ansible_check_mode
-  tags: [ai, claude]
-
 - name: ai_tools | Install Gemini CLI
   ansible.builtin.shell:
     cmd: |
@@ -20,3 +12,17 @@
   changed_when: "'ALREADY_INSTALLED' not in workstation_gemini_install.stdout"
   when: not ansible_check_mode
   tags: [ai, gemini]
+
+- name: ai_tools | Install OpenClaw.ai
+  ansible.builtin.shell:
+    cmd: |
+      if ! command -v openclaw &> /dev/null; then
+        set -o pipefail && curl -fsSL https://openclaw.ai/install.sh | bash
+      else
+        echo "ALREADY_INSTALLED"
+      fi
+    executable: /bin/zsh
+  register: workstation_openclaw_install
+  changed_when: "'ALREADY_INSTALLED' not in workstation_openclaw_install.stdout"
+  when: not ansible_check_mode
+  tags: [ai, openclaw]
