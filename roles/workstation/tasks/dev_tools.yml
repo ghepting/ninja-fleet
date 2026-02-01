@@ -1,0 +1,44 @@
+- name: dev_tools | Install development tools (macOS)
+  community.general.homebrew:
+    name:
+      - graphviz
+      - imagemagick
+      - postgresql
+    state: present
+  when: ansible_facts['os_family'] == 'Darwin'
+  tags: [dev_tools, apps]
+
+- name: dev_tools | Install development tools (Debian/Ubuntu)
+  ansible.builtin.apt:
+    name:
+      - graphviz
+      - imagemagick
+      - libpq-dev
+    state: present
+    update_cache: true
+  when: ansible_facts['pkg_mgr'] == 'apt'
+  become: true
+  tags: [dev_tools, apps]
+
+- name: dev_tools | Install development tools (Fedora)
+  ansible.builtin.dnf:
+    name:
+      - graphviz
+      - ImageMagick
+      - postgresql-devel
+    state: present
+  when: ansible_facts['pkg_mgr'] == 'dnf'
+  become: true
+  tags: [dev_tools, apps]
+
+- name: dev_tools | Install development tools (Arch)
+  community.general.pacman:
+    name:
+      - graphviz
+      - imagemagick
+      - postgresql-libs
+    state: present
+    update_cache: true
+  when: ansible_facts['pkg_mgr'] == 'pacman'
+  become: true
+  tags: [dev_tools, apps]

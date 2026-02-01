@@ -22,6 +22,10 @@
   ansible.builtin.include_tasks: ssh.yml
   tags: [ssh, shell]
 
+- name: Install Development Tools
+  ansible.builtin.include_tasks: dev_tools.yml
+  tags: [dev_tools, apps]
+
 - name: Install apps
   ansible.builtin.include_tasks: apps.yml
   tags: [apps]
