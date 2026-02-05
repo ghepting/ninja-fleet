@@ -12,18 +12,3 @@
   changed_when: "'ALREADY_INSTALLED' not in workstation_gemini_install.stdout"
   when: not ansible_check_mode
   tags: [ai, gemini]
-
-- name: ai_tools | Install OpenClaw.ai
-  ansible.builtin.shell:
-    cmd: |
-      [ -f ~/.nvm/nvm.sh ] && source ~/.nvm/nvm.sh
-      if ! command -v openclaw &> /dev/null; then
-        set -o pipefail && curl -fsSL https://openclaw.ai/install.sh | bash -s -- --no-onboard --no-prompt
-      else
-        echo "ALREADY_INSTALLED"
-      fi
-    executable: /bin/zsh
-  register: workstation_openclaw_install
-  changed_when: "'ALREADY_INSTALLED' not in workstation_openclaw_install.stdout"
-  when: not ansible_check_mode
-  tags: [ai, openclaw]
