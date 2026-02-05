@@ -37,7 +37,7 @@ pause.{{ primary_domain }} {
 }
 
 # --- Custom / Extra Configurations ---
-{{ caddy_extra_config | default('') }}
+{{ caddy_extra_config | default('') | trim }}
 
 # --- Public Services ---
 
